@@ -1,6 +1,27 @@
-export function generateKhqrQrUrl(bakongId: string, amountKhr: number, orderId: string): string {
-  const cleanId = bakongId.trim() || 'cheasim_primary@acleda';
-  // Standard format for mock/test KHQR display using qrserver
-  const qrText = `bakong://pay?id=${encodeURIComponent(cleanId)}&amount=${amountKhr}&currency=KHR&memo=${encodeURIComponent(orderId)}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrText)}&color=1e293b`;
+import QRCode from 'qrcode';
+import { generateEmvcoKhqr, KhqrPayloadOptions } from './khqrEngine';
+
+export interface GeneratedKhqrResult {
+  qrString: string;
+  dataUrl: string;
 }
+
+/**
+ * Generates an official, scannable EMVCo KHQR code data URL locally with custom amount
+ */
+export async function generateKhqrDataUrl(options: KhqrPayloadOptions): Promise<GeneratedKhqrResult> {
+  const qrString = generateEmvcoKhqr(options);
+  const dataUrl = await QRCode.toDataURL(qrString, {
+    width: 360,
+    margin: 1,
+    color: {
+      dark: '#002f49', // ABA navy color
+      light: '#ffffff',
+    },
+    errorCorrectionLevel: 'M',
+  });
+  return { qrString, dataUrl };
+}
+
+export { generateEmvcoKhqr };
+export type { KhqrPayloadOptions };
