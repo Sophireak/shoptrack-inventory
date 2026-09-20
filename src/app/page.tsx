@@ -476,9 +476,10 @@ export default function StorefrontPage() {
   };
 
   const handleCompleteKhqr = () => {
-    setIsKhqrOpen(false);
-    confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
-    alert('🎉 យើងបានទទួលការបញ្ជាក់ការទូទាត់របស់អ្នករួចរាល់ហើយ! សូមអរគុណ។');
+    // Keep modal open so the customer sees the official sales receipt!
+    if (currentOrder) {
+      setCurrentOrder((prev) => (prev ? { ...prev, status: 'completed' } : prev));
+    }
   };
 
   return (

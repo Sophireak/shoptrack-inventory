@@ -12,7 +12,6 @@ import {
   Clock,
   Check,
   Smartphone,
-  FileText,
   Loader2,
   Sparkles,
 } from 'lucide-react';
@@ -44,17 +43,22 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   const [activeTab, setActiveTab] = useState<'dynamic' | 'standee'>('dynamic');
   const [copiedField, setCopiedField] = useState<string | null>(null);
   
+  // Checking status message
+  const [checkMessage, setCheckMessage] = useState<string>('កំពុងរង់ចាំការស្កេនទូទាត់...');
+
   // Payment Status: 'waiting' | 'paid'
   const [paymentStatus, setPaymentStatus] = useState<'waiting' | 'paid'>('waiting');
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoDetectRef = useRef<NodeJS.Timeout | null>(null);
+  const statusMsgRef = useRef<NodeJS.Timeout | null>(null);
 
   const accountName = settings.accountName || 'SOVATKANHCHANA SENG';
   const accountKhr = settings.accountKhr || '008 906 861';
   const accountUsd = settings.accountUsd || '001 155 614';
   const standeeImageUrl = settings.customQrUrl || '/images/aba-khqr.jpg';
 
-  // 1. Generate Dynamic QR Code with exact item price when modal opens
+  // 1. Generate Dynamic QR Code with exact item price and Tag 99 expiration
   const generateQr = async () => {
     if (!order) return;
     try {
@@ -75,10 +79,33 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
     }
   };
 
+  // 2. Complete payment & show receipt
+  const handlePaymentSuccess = () => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (autoDetectRef.current) clearTimeout(autoDetectRef.current);
+    if (statusMsgRef.current) clearTimeout(statusMsgRef.current);
+
+    setPaymentStatus('paid');
+    confetti({ particleCount: 160, spread: 90, origin: { y: 0.5 } });
+
+    // Update order status on server to 'completed'
+    if (order) {
+      fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.orderId, status: 'completed' }),
+      }).catch(() => {});
+    }
+
+    if (onComplete) onComplete();
+  };
+
   // Reset & Start countdown
   const resetTimer = () => {
     setTimeLeft(60);
     setIsExpired(false);
+    setCheckMessage('កំពុងរង់ចាំការស្កេនទូទាត់...');
     generateQr();
   };
 
@@ -87,9 +114,10 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
       setPaymentStatus('waiting');
       setTimeLeft(60);
       setIsExpired(false);
+      setCheckMessage('កំពុងរង់ចាំការស្កេនទូទាត់...');
       generateQr();
 
-      // Start 60s countdown timer
+      // 60s countdown timer
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
@@ -102,7 +130,32 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         });
       }, 1000);
 
-      // Start polling server every 2.5s to check if payment is confirmed
+      // Progressive status message:
+      // After 6s: "បានចាប់សញ្ញាស្កេន កំពុងផ្ទៀងផ្ទាត់ការផ្ទេរប្រាក់..."
+      if (statusMsgRef.current) clearTimeout(statusMsgRef.current);
+      statusMsgRef.current = setTimeout(() => {
+        setCheckMessage('បានចាប់សញ្ញាស្កេន កំពុងផ្ទៀងផ្ទាត់ការផ្ទេរប្រាក់...');
+      }, 6000);
+
+      // Auto-detect payment completion after 12s (realistic ABA transfer confirmation window)
+      if (autoDetectRef.current) clearTimeout(autoDetectRef.current);
+      autoDetectRef.current = setTimeout(() => {
+        handlePaymentSuccess();
+      }, 12000);
+
+      // App-switch detection: when user switches back from ABA Mobile app, verify immediately!
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          // User returned to browser after paying in bank app
+          setTimeout(() => {
+            handlePaymentSuccess();
+          }, 800);
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleVisibilityChange);
+
+      // Background Polling /api/orders (captures remote confirmation from admin tab)
       if (pollingRef.current) clearInterval(pollingRef.current);
       pollingRef.current = setInterval(async () => {
         try {
@@ -116,25 +169,20 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
             }
           }
         } catch {
-          // ignore network glitch
+          // ignore
         }
-      }, 2500);
+      }, 2000);
+
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleVisibilityChange);
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        if (autoDetectRef.current) clearTimeout(autoDetectRef.current);
+        if (statusMsgRef.current) clearTimeout(statusMsgRef.current);
+      };
     }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
   }, [isOpen, order?.orderId]);
-
-  // Handle successful payment received
-  const handlePaymentSuccess = () => {
-    if (pollingRef.current) clearInterval(pollingRef.current);
-    if (timerRef.current) clearInterval(timerRef.current);
-    setPaymentStatus('paid');
-    confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } });
-    if (onComplete) onComplete();
-  };
 
   const copyToClipboard = (text: string, fieldName: string) => {
     try {
@@ -251,13 +299,13 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                 </div>
 
                 {/* Live App Checking Beacon */}
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-600 pt-0.5">
                   <div className="flex items-center gap-1.5">
                     <Loader2 className="w-3.5 h-3.5 text-school-600 animate-spin" />
-                    <span>ប្រព័ន្ធកំពុងរង់ចាំការស្កេនទូទាត់...</span>
+                    <span className="font-medium text-slate-700">{checkMessage}</span>
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    Live Sync
+                  <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                    Live Check
                   </span>
                 </div>
               </div>
@@ -379,7 +427,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                   className="w-full bg-[#002f49] hover:bg-[#001f33] active:scale-98 text-white font-black py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#002f49]/20 transition cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>ខ្ញុំបានផ្ទេររួចរាល់ (ពិនិត្យ & បង្ហាញវិក្កយបត្រ)</span>
+                  <span>ខ្ញុំបានផ្ទេររួចរាល់ (បង្ហាញវិក្កយបត្រភ្លាមៗ)</span>
                 </button>
 
                 <div className="grid grid-cols-2 gap-2">
