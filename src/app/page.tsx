@@ -592,7 +592,7 @@ export default function StorefrontPage() {
           </p>
           <p>ទីតាំង៖ {settings.location} · ទំនាក់ទំនង៖ {settings.phone1} / {settings.phone2}</p>
           <p className="text-[11px] text-slate-400 font-sans">
-            បង្កើតឡើងដោយក្តីស្រលាញ់សម្រាប់សាលាបឋមសិក្សា សម្តេចជាស៊ីម · Developed by{' '}
+            Developed by{' '}
             <a
               href="https://sophireak.github.io"
               target="_blank"
