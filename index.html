@@ -262,7 +262,7 @@
       <!-- Filter Buttons -->
       <div class="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
         <button onclick="filterCategory('all')" class="cat-filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-school-600 text-white shadow-sm transition whitespace-nowrap" data-cat="all">
-          ទាំងអស់
+          ទាំងអស់ (7)
         </button>
         <button onclick="filterCategory('boy')" class="cat-filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-school-400 transition whitespace-nowrap" data-cat="boy">
           ឯកសណ្ឋានប្រុស (3)
@@ -271,7 +271,7 @@
           ឯកសណ្ឋានស្រី (2)
         </button>
         <button onclick="filterCategory('sport')" class="cat-filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-school-400 transition whitespace-nowrap" data-cat="sport">
-          ឈុតកីឡា (3 ពណ៌)
+          ឈុតកីឡា (1)
         </button>
         <button onclick="filterCategory('supplies')" class="cat-filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-school-400 transition whitespace-nowrap" data-cat="supplies">
           សម្ភារៈសិស្ស (1)
@@ -1007,6 +1007,8 @@
     let currentCategory = 'all';
     let selectedGradeNumber = 1;
     let lastConfirmedOrder = null;
+    let activeSportColor = 'blue'; // 'blue' | 'orange' | 'green'
+    let activeSportSize = '24';
 
     // Initialize Page
     document.addEventListener('DOMContentLoaded', async () => {
@@ -1055,14 +1057,196 @@
       }
     }
 
+    // Helper to synthesize single interactive sport uniform card for storefront
+    function getStorefrontCatalog() {
+      const sportItems = PRODUCTS.filter(p => p.id && p.id.startsWith('cs-sport-'));
+      const nonSportItems = PRODUCTS.filter(p => !p.id || !p.id.startsWith('cs-sport-'));
+
+      if (sportItems.length > 0) {
+        const blueItem = sportItems.find(p => p.id === 'cs-sport-blue') || sportItems[0];
+        const orangeItem = sportItems.find(p => p.id === 'cs-sport-orange') || sportItems[0];
+        const greenItem = sportItems.find(p => p.id === 'cs-sport-green') || sportItems[0];
+
+        const unifiedSport = {
+          id: 'cs-sport-uniform',
+          isVariantGroup: true,
+          name: 'School Sport Uniform Set (Unisex)',
+          nameKh: 'ឈុតកីឡាសាលា (អាវយឺត + ខោកីឡា)',
+          category: 'sport',
+          priceKhr: blueItem.priceKhr || 26000,
+          priceUsd: blueItem.priceUsd || 6.34,
+          description: 'ឈុតកីឡាផ្លូវការសម្រាប់សិស្សបឋមសិក្សា (អាវយឺត + ខោកីឡា) សាច់ក្រណាត់យឺតទន់ត្រជាក់ ស្រួលរត់លេង។ ជ្រើសរើសពណ៌តាមកម្រិតថ្នាក់៖ ថ្នាក់ ១-២ (ខៀវ), ថ្នាក់ ៣-៤ (ទឹកក្រូច), ថ្នាក់ ៥-៦ (បៃតង)។',
+          variants: {
+            blue: {
+              id: 'cs-sport-blue',
+              gradeGroup: 'ថ្នាក់ទី១ - ទី២',
+              colorKh: 'ពណ៌ខៀវ',
+              badge: 'ថ្នាក់ទី១ - ទី២ (ខៀវ)',
+              colorCode: 'blue',
+              image: blueItem.image || 'https://images.unsplash.com/photo-1577471488278-16eec37ffcc2?w=700&auto=format&fit=crop&q=80',
+              sizes: blueItem.sizes
+            },
+            orange: {
+              id: 'cs-sport-orange',
+              gradeGroup: 'ថ្នាក់ទី៣ - ទី៤',
+              colorKh: 'ពណ៌ទឹកក្រូច',
+              badge: 'ថ្នាក់ទី៣ - ទី៤ (ទឹកក្រូច)',
+              colorCode: 'orange',
+              image: orangeItem.image || 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=700&auto=format&fit=crop&q=80',
+              sizes: orangeItem.sizes
+            },
+            green: {
+              id: 'cs-sport-green',
+              gradeGroup: 'ថ្នាក់ទី៥ - ទី៦',
+              colorKh: 'ពណ៌បៃតង',
+              badge: 'ថ្នាក់ទី៥ - ទី៦ (បៃតង)',
+              colorCode: 'green',
+              image: greenItem.image || 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=700&auto=format&fit=crop&q=80',
+              sizes: greenItem.sizes
+            }
+          }
+        };
+
+        const idHolderIndex = nonSportItems.findIndex(p => p.id === 'cs-id-holder');
+        if (idHolderIndex !== -1) {
+          nonSportItems.splice(idHolderIndex, 0, unifiedSport);
+        } else {
+          nonSportItems.push(unifiedSport);
+        }
+        return nonSportItems;
+      }
+
+      return PRODUCTS;
+    }
+
     // Render Product Cards
     function renderProducts() {
       const grid = document.getElementById('productGrid');
+      const catalog = getStorefrontCatalog();
       const filtered = currentCategory === 'all' 
-        ? PRODUCTS 
-        : PRODUCTS.filter(p => p.category === currentCategory);
+        ? catalog 
+        : catalog.filter(p => p.category === currentCategory);
 
       grid.innerHTML = filtered.map(prod => {
+        if (prod.isVariantGroup) {
+          // Render Unified Sport Uniform Card
+          const currentVariant = prod.variants[activeSportColor] || prod.variants.blue;
+          let sizeObj = currentVariant.sizes.find(s => s.size === activeSportSize);
+          if (!sizeObj) {
+            sizeObj = currentVariant.sizes[0];
+            activeSportSize = sizeObj.size;
+          }
+          const stock = sizeObj.stock;
+          const isLow = stock <= 5;
+          const stockHtml = isLow
+            ? `<span id="stockIndicator-cs-sport-uniform" class="text-[10px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded animate-pulse">⚠️ នៅសល់ត្រឹម ${stock}</span>`
+            : `<span id="stockIndicator-cs-sport-uniform" class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">នៅសល់ ${stock} កំប្លេ</span>`;
+
+          return `
+            <div class="bg-white rounded-2xl border-2 border-school-200/80 hover:border-school-500 hover:shadow-xl transition-all duration-200 flex flex-col overflow-hidden group">
+              
+              <!-- Image with Badges -->
+              <div class="relative h-48 sm:h-52 bg-slate-100 overflow-hidden">
+                <img id="sportCardImage" src="${currentVariant.image}" alt="${currentVariant.badge}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                <div class="absolute top-2.5 left-2.5 flex flex-col gap-1">
+                  <span id="sportCardBadge" class="bg-school-700/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm">
+                    ${currentVariant.badge}
+                  </span>
+                </div>
+                <button onclick="openSizeGuideModal()" class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-slate-700 hover:text-school-700 p-1.5 rounded-lg text-[10px] font-semibold flex items-center gap-1 shadow-sm">
+                  <i data-lucide="ruler" class="w-3 h-3"></i>
+                  <span>Size Guide</span>
+                </button>
+              </div>
+
+              <!-- Content -->
+              <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <h4 class="font-bold text-slate-900 text-sm md:text-base leading-snug group-hover:text-school-700 transition">
+                      ${prod.nameKh}
+                    </h4>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 shrink-0">Unisex</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 font-sans">${prod.name}</p>
+                  
+                  <!-- Color / Grade Selector -->
+                  <div class="mt-2.5 pt-2 border-t border-slate-100">
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1.5">
+                      ជ្រើសពណ៌តាមថ្នាក់ (Color by Grade):
+                    </label>
+                    <div class="grid grid-cols-3 gap-1">
+                      <button type="button" onclick="selectSportColor('blue')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeSportColor === 'blue' ? 'bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                        <span class="flex items-center gap-1 text-[10px]">
+                          <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
+                          <span>ថ្នាក់ ១-២</span>
+                        </span>
+                        <span class="text-[9px] opacity-75">ពណ៌ខៀវ</span>
+                      </button>
+
+                      <button type="button" onclick="selectSportColor('orange')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeSportColor === 'orange' ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                        <span class="flex items-center gap-1 text-[10px]">
+                          <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                          <span>ថ្នាក់ ៣-៤</span>
+                        </span>
+                        <span class="text-[9px] opacity-75">ពណ៌ទឹកក្រូច</span>
+                      </button>
+
+                      <button type="button" onclick="selectSportColor('green')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeSportColor === 'green' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                        <span class="flex items-center gap-1 text-[10px]">
+                          <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
+                          <span>ថ្នាក់ ៥-៦</span>
+                        </span>
+                        <span class="text-[9px] opacity-75">ពណ៌បៃតង</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sizing Selector -->
+                <div class="pt-2 border-t border-slate-100">
+                  <div class="flex items-center justify-between text-xs mb-1.5">
+                    <label class="font-semibold text-slate-700">ជ្រើសទំហំ (Size):</label>
+                    ${stockHtml}
+                  </div>
+                  
+                  <div class="grid grid-cols-3 gap-1.5" id="sizeOptions-cs-sport-uniform">
+                    ${currentVariant.sizes.map(s => `
+                      <button type="button" 
+                        onclick="selectSportSize('${s.size}', ${s.stock})"
+                        class="sport-size-btn py-1.5 text-xs font-bold rounded-lg border text-center transition ${s.size === activeSportSize ? 'bg-school-600 text-white border-school-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'}"
+                        data-size="${s.size}" data-stock="${s.stock}">
+                        ${s.size}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Price & Add Button -->
+                <div class="pt-2 flex items-center justify-between gap-2">
+                  <div>
+                    <div class="text-base md:text-lg font-extrabold text-school-800">
+                      ${prod.priceKhr.toLocaleString()} ៛
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-sans">~$${prod.priceUsd.toFixed(2)}</div>
+                  </div>
+
+                  <button onclick="addSportToCart()" class="bg-school-600 hover:bg-school-700 active:scale-95 text-white font-bold py-2 px-3.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-school-600/20 transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>ដាក់កន្ត្រក</span>
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          `;
+        }
+
+        // Standard Single Product Card
         const defaultSize = prod.sizes[0].size;
         const defaultStock = prod.sizes[0].stock;
 
@@ -1140,6 +1324,71 @@
       lucide.createIcons();
     }
 
+    // Sport Card Color & Size Handlers
+    function selectSportColor(colorKey) {
+      activeSportColor = colorKey;
+      renderProducts();
+    }
+
+    function selectSportSize(size, stock) {
+      activeSportSize = size;
+      const container = document.getElementById('sizeOptions-cs-sport-uniform');
+      if (container) {
+        const buttons = container.querySelectorAll('button');
+        buttons.forEach(btn => {
+          if (btn.getAttribute('data-size') === size) {
+            btn.className = 'sport-size-btn py-1.5 text-xs font-bold rounded-lg border text-center transition bg-school-600 text-white border-school-600';
+          } else {
+            btn.className = 'sport-size-btn py-1.5 text-xs font-bold rounded-lg border text-center transition bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300';
+          }
+        });
+      }
+
+      const indicator = document.getElementById('stockIndicator-cs-sport-uniform');
+      if (indicator) {
+        if (stock <= 5) {
+          indicator.className = 'text-[10px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded animate-pulse';
+          indicator.innerText = `⚠️ នៅសល់ត្រឹម ${stock}`;
+        } else {
+          indicator.className = 'text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded';
+          indicator.innerText = `នៅសល់ ${stock} កំប្លេ`;
+        }
+      }
+    }
+
+    function addSportToCart() {
+      const catalog = getStorefrontCatalog();
+      const sportProd = catalog.find(p => p.id === 'cs-sport-uniform');
+      if (!sportProd) return;
+
+      const currentVariant = sportProd.variants[activeSportColor] || sportProd.variants.blue;
+      const sizeObj = currentVariant.sizes.find(s => s.size === activeSportSize) || currentVariant.sizes[0];
+      const selectedSize = sizeObj.size;
+
+      const cartItemId = `${currentVariant.id}__${selectedSize}`;
+      const existing = cart.find(item => item.cartItemId === cartItemId);
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          cartItemId,
+          id: currentVariant.id,
+          name: `Sport Uniform - ${currentVariant.colorKh} (${currentVariant.gradeGroup})`,
+          nameKh: `ឈុតកីឡាសាលា ${currentVariant.colorKh} (${currentVariant.gradeGroup})`,
+          size: selectedSize,
+          priceKhr: sportProd.priceKhr,
+          priceUsd: sportProd.priceUsd,
+          image: currentVariant.image,
+          qty: 1
+        });
+      }
+
+      saveCart();
+      updateCartUI();
+      openCartDrawer();
+    }
+
     // Handle Size Selection on Card
     function selectCardSize(productId, size, stock) {
       const container = document.getElementById(`sizeOptions-${productId}`);
@@ -1207,6 +1456,19 @@
         document.getElementById('recBottom').innerText = rec.bottom;
         document.getElementById('recSport').innerText = rec.sport;
       }
+
+      // Auto-switch sport card color and size to match grade
+      if (grade === 1 || grade === 2) {
+        activeSportColor = 'blue';
+        activeSportSize = grade === 1 ? '20' : '22';
+      } else if (grade === 3 || grade === 4) {
+        activeSportColor = 'orange';
+        activeSportSize = grade === 3 ? '24' : '26';
+      } else if (grade === 5 || grade === 6) {
+        activeSportColor = 'green';
+        activeSportSize = grade === 5 ? '28' : '30';
+      }
+      renderProducts();
     }
 
     function scrollToProducts() {
@@ -1215,6 +1477,11 @@
 
     // Cart Management
     function addToCart(productId) {
+      if (productId === 'cs-sport-uniform') {
+        addSportToCart();
+        return;
+      }
+
       const prod = PRODUCTS.find(p => p.id === productId);
       if (!prod) return;
 
