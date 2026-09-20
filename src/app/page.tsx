@@ -11,7 +11,7 @@ import { KhqrModal } from '@/components/KhqrModal';
 import { SizeGuideModal } from '@/components/SizeGuideModal';
 import { BASE_PRODUCTS, DEFAULT_SETTINGS, ID_HOLDER_VARIANTS, ID_HOLDER_TYPES } from '@/lib/catalog';
 import { Product, ProductCategory, CartItem, Order, StoreSettings, SportVariant } from '@/types';
-import { ShoppingBag, Sparkles, MapPin, Phone } from 'lucide-react';
+import { ShoppingBag, Sparkles, MapPin, Phone, MessageCircle } from 'lucide-react';
 
 export default function StorefrontPage() {
   const [products] = useState<Product[]>(BASE_PRODUCTS);
@@ -302,32 +302,48 @@ export default function StorefrontPage() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-4 sm:py-6">
         {/* Hero Welcome Banner */}
-        <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
           <div className="max-w-2xl space-y-3 z-10 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 bg-school-50 text-school-800 text-xs font-bold px-3 py-1 rounded-full border border-school-200">
-              <Sparkles className="w-3.5 h-3.5 text-school-600" />
-              <span>ហាងឯកសណ្ឋានផ្លូវការ ក្នុងបរិវេណសាលា</span>
+            <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>ទិន្នន័យស្តុកផ្សាយផ្ទាល់ពីបញ្ជរក្នុងសាលា</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-snug">
               ឯកសណ្ឋានសិស្សបឋមសិក្សា <br className="hidden sm:inline" />
-              <span className="text-school-600 font-black">សម្តេចជាស៊ីម</span>
+              <span className="text-school-700 font-black">សម្តេចជាស៊ីម</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
-              ផ្តល់ជូននូវឯកសណ្ឋានសិស្សប្រុស-ស្រី ឈុតកីឡាពណ៌ផ្លូវការតាមកម្រិតថ្នាក់ និងប្រអប់កាត/ខ្សែពាក់កដែលមានឡូហ្គោសាលាពិតប្រាកដ។
+              ពិនិត្យមើលស្តុកទំហំ និងពណ៌ផ្លូវការតាមកម្រិតថ្នាក់ (ថ្នាក់ទី ១ ដល់ ទី ៦) ភ្លាមៗ។ អាចកក់ទុកតាម Telegram ឬមកទិញផ្ទាល់នៅបញ្ជរមុខអគាររដ្ឋបាល។
             </p>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-1 text-xs text-slate-500 font-sans">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-school-600" />
+            
+            {/* Direct Contact / Actions for Parents */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-1">
+              <a
+                href={`tel:${settings.phone1.replace(/\s+/g, '')}`}
+                className="bg-school-700 hover:bg-school-800 active:scale-95 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm shadow-school-800/20 transition"
+              >
+                <Phone className="w-3.5 h-3.5 text-amber-300" />
+                <span>ខលសួរផ្ទាល់៖ {settings.phone1}</span>
+              </a>
+
+              <a
+                href={`https://t.me/${settings.telegram || 'bNha_dev'}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-sky-50 hover:bg-sky-100 active:scale-95 text-sky-800 font-bold text-xs px-3.5 py-2 rounded-xl border border-sky-200 flex items-center gap-1.5 transition"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-sky-600" />
+                <span>ឆាត Telegram ទៅកាន់អ្នកគ្រប់គ្រង</span>
+              </a>
+
+              <div className="hidden lg:flex items-center gap-1 text-xs text-slate-500 pl-2">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" />
                 <span>មុខអគាររដ្ឋបាលសាលា</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Phone className="w-4 h-4 text-school-600" />
-                <span>{settings.phone1}</span>
               </div>
             </div>
           </div>
 
-          <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-3xl bg-school-100 flex items-center justify-center text-school-700 shadow-inner shrink-0 relative overflow-hidden">
+          <div className="w-36 h-36 sm:w-48 sm:h-48 rounded-2xl bg-school-50 flex items-center justify-center text-school-700 shadow-inner shrink-0 relative overflow-hidden border border-slate-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://images.unsplash.com/photo-1577471488278-16eec37ffcc2?w=700&auto=format&fit=crop&q=80"

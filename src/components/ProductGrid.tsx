@@ -56,14 +56,14 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
 
   return (
     <section id="productsSection" className="my-8 scroll-mt-24">
-      {/* Section Header & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* Filter Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
             បញ្ជីឯកសណ្ឋាន និងសម្ភារៈផ្លូវការ (៧ មុខគត់)
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            ជ្រើសរើសទំហំ ឬពណ៌តាមកម្រិតថ្នាក់ដើម្បីកុម្ម៉ង់ទិញ
+            ជ្រើសរើសទំហំ ឬពណ៌តាមកម្រិតថ្នាក់ដើម្បីពិនិត្យស្តុក ឬកុម្ម៉ង់ទិញ
           </p>
         </div>
 
@@ -76,14 +76,30 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
               onClick={() => onChangeCategory(cat.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                 currentCategory === cat.id
-                  ? 'bg-school-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                  ? 'bg-school-700 text-white shadow-xs'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
               {cat.label} ({cat.count})
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Live Stock Notification Bar */}
+      <div className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-emerald-950">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="font-bold">
+            ទិន្នន័យស្តុកផ្សាយផ្ទាល់ពីបញ្ជរ៖
+          </span>
+          <span className="text-emerald-800">
+            លោកអ្នកអាចមើលចំនួនស្តុកលើទំហំនីមួយៗ ឬចុច &quot;សួរ Telegram&quot; ដើម្បីកក់ទុកមុន។
+          </span>
+        </div>
+        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md self-start sm:self-auto shrink-0">
+          🟢 មានទំនិញគ្រប់មុខ
+        </span>
       </div>
 
       {/* Grid of Product Cards */}
