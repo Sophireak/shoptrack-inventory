@@ -168,18 +168,48 @@ const DEFAULT_CATALOG = [
   },
   {
     id: 'cs-id-holder',
-    name: 'School ID Card Holder & Lanyard',
-    nameKh: 'ប្រអប់កាតសិស្ស និងខ្សែពាក់ក',
+    name: 'School ID Card Holder & Lanyard (1 Set)',
+    nameKh: 'ឈុតប្រអប់កាត និងខ្សែពាក់ក (1 Set)',
     category: 'supplies',
-    priceKhr: 4000,
-    priceUsd: 0.98,
-    badge: 'ឡូហ្គោសាលា',
+    priceKhr: 6500,
+    priceUsd: 1.59,
+    badge: 'ឈុតពេញលេញ',
     image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
-    description: 'ប្រអប់ជ័រការពារកាតសិស្ស និងខ្សែពាក់កមានព្រីនឈ្មោះ បឋមសិក្សា សម្តេចជាស៊ីម បែងចែកពណ៌តាមកម្រិតថ្នាក់។',
+    description: 'ប្រអប់ជ័រការពារកាតសិស្ស និងខ្សែពាក់កមានព្រីនឈ្មោះ បឋមសិក្សា សម្តេចជាស៊ីម បែងចែកពណ៌តាមកម្រិតថ្នាក់ (១ ឈុត ៦,៥០០៛ / តែប្រអប់ ១,៥០០៛ / តែខ្សែ ៥,០០០៛)។',
     sizes: [
       { size: 'ពណ៌ខៀវ (ថ្នាក់ទី១-២)', stock: 120 },
       { size: 'ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)', stock: 95 },
       { size: 'ពណ៌បៃតង (ថ្នាក់ទី៥-៦)', stock: 80 }
+    ]
+  },
+  {
+    id: 'cs-id-holder-only',
+    name: 'School ID Card Holder (Only)',
+    nameKh: 'ប្រអប់កាតសិស្ស (Card Holder Only)',
+    category: 'supplies',
+    priceKhr: 1500,
+    priceUsd: 0.37,
+    badge: 'តែប្រអប់កាត',
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
+    description: 'ប្រអប់ជ័ររឹងថ្លាការពារកាតសិស្ស មិនឱ្យជ្រាបទឹក ឬបាក់កាត (ទំហំស្តង់ដារ Free Size)។',
+    sizes: [
+      { size: 'ស្តង់ដារ (Standard)', stock: 150 }
+    ]
+  },
+  {
+    id: 'cs-id-lanyard-only',
+    name: 'School ID Lanyard (Only)',
+    nameKh: 'ខ្សែពាក់កសិស្ស (Lanyard Only)',
+    category: 'supplies',
+    priceKhr: 5000,
+    priceUsd: 1.22,
+    badge: 'តែខ្សែពាក់ក',
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
+    description: 'ខ្សែពាក់កពណ៌តាមកម្រិតថ្នាក់ មានព្រីនឈ្មោះ បឋមសិក្សា សម្តេចជាស៊ីម និងទំពក់ដែកស្អាតមាំ។',
+    sizes: [
+      { size: 'ពណ៌ខៀវ (ថ្នាក់ទី១-២)', stock: 100 },
+      { size: 'ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)', stock: 85 },
+      { size: 'ពណ៌បៃតង (ថ្នាក់ទី៥-៦)', stock: 70 }
     ]
   }
 ];

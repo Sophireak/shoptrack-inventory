@@ -979,18 +979,48 @@
       },
       {
         id: 'cs-id-holder',
-        name: 'School ID Card Holder & Lanyard',
+        name: 'School ID Card Holder & Lanyard (1 Set)',
         nameKh: 'ប្រអប់កាតសិស្ស និងខ្សែពាក់ក',
         category: 'supplies',
-        priceKhr: 4000,
-        priceUsd: 0.98,
+        priceKhr: 6500,
+        priceUsd: 1.59,
         badge: 'ឡូហ្គោសាលា',
         image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
-        description: 'ប្រអប់ជ័រការពារកាតសិស្ស និងខ្សែពាក់កមានព្រីនឈ្មោះ បឋមសិក្សា សម្តេចជាស៊ីម បែងចែកពណ៌តាមកម្រិតថ្នាក់។',
+        description: 'ប្រអប់ជ័រការពារកាតសិស្ស និងខ្សែពាក់កមានព្រីនឈ្មោះ បឋមសិក្សា សម្តេចជាស៊ីម បែងចែកពណ៌តាមកម្រិតថ្នាក់ (១ ឈុត ៦,៥០០៛ / តែប្រអប់ ១,៥០០៛ / តែខ្សែ ៥,០០០៛)។',
         sizes: [
           { size: 'ពណ៌ខៀវ (ថ្នាក់ទី១-២)', stock: 120 },
           { size: 'ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)', stock: 95 },
           { size: 'ពណ៌បៃតង (ថ្នាក់ទី៥-៦)', stock: 80 }
+        ]
+      },
+      {
+        id: 'cs-id-holder-only',
+        name: 'School ID Card Holder (Only)',
+        nameKh: 'ប្រអប់កាតសិស្ស (Card Holder Only)',
+        category: 'supplies',
+        priceKhr: 1500,
+        priceUsd: 0.37,
+        badge: 'តែប្រអប់កាត',
+        image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
+        description: 'ប្រអប់ជ័ររឹងថ្លាការពារកាតសិស្ស មិនឱ្យជ្រាបទឹក ឬបាក់កាត (ទំហំស្តង់ដារ Free Size)។',
+        sizes: [
+          { size: 'ស្តង់ដារ (Standard)', stock: 150 }
+        ]
+      },
+      {
+        id: 'cs-id-lanyard-only',
+        name: 'School ID Lanyard (Only)',
+        nameKh: 'ខ្សែពាក់កសិស្ស (Lanyard Only)',
+        category: 'supplies',
+        priceKhr: 5000,
+        priceUsd: 1.22,
+        badge: 'តែខ្សែពាក់ក',
+        image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
+        description: 'ខ្សែពាក់កពណ៌តាមកម្រិតថ្នាក់ មានព្រីនឈ្មោះ បឋមសិក្សា សម្តេចជាស៊ីម និងទំពក់ដែកស្អាតមាំ។',
+        sizes: [
+          { size: 'ពណ៌ខៀវ (ថ្នាក់ទី១-២)', stock: 100 },
+          { size: 'ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)', stock: 85 },
+          { size: 'ពណ៌បៃតង (ថ្នាក់ទី៥-៦)', stock: 70 }
         ]
       }
     ];
@@ -1015,6 +1045,41 @@
     let activeSportColor = 'blue'; // 'blue' | 'orange' | 'green'
     let activeSportSize = '24';
     let activeIdHolderColor = 'blue'; // 'blue' | 'orange' | 'green'
+    let activeIdHolderType = 'set'; // 'set' | 'holder' | 'lanyard'
+
+    // ID Holder Package Pricing & Options
+    const ID_HOLDER_TYPES = {
+      set: {
+        id: 'set',
+        labelKh: '១ ឈុត (Set)',
+        nameKh: 'ឈុតប្រអប់កាត + ខ្សែពាក់ក (1 Set)',
+        nameEn: 'ID Card Set (Holder + Lanyard)',
+        priceKhr: 6500,
+        priceUsd: 1.59,
+        badge: 'ឈុតពេញលេញ',
+        hasColor: true
+      },
+      holder: {
+        id: 'holder',
+        labelKh: 'តែប្រអប់កាត',
+        nameKh: 'ប្រអប់កាតសិស្ស (Card Holder Only)',
+        nameEn: 'School ID Card Holder (Only)',
+        priceKhr: 1500,
+        priceUsd: 0.37,
+        badge: 'តែប្រអប់កាត',
+        hasColor: false
+      },
+      lanyard: {
+        id: 'lanyard',
+        labelKh: 'តែខ្សែពាក់ក',
+        nameKh: 'ខ្សែពាក់កសិស្ស (Lanyard Only)',
+        nameEn: 'School ID Lanyard (Only)',
+        priceKhr: 5000,
+        priceUsd: 1.22,
+        badge: 'តែខ្សែពាក់ក',
+        hasColor: true
+      }
+    };
 
     // ID Holder & Lanyard Grade Color Variants
     const ID_HOLDER_VARIANTS = {
@@ -1094,7 +1159,7 @@
     // Helper to synthesize single interactive sport uniform card for storefront
     function getStorefrontCatalog() {
       const sportItems = PRODUCTS.filter(p => p.id && p.id.startsWith('cs-sport-'));
-      const nonSportItems = PRODUCTS.filter(p => !p.id || !p.id.startsWith('cs-sport-'));
+      const nonSportItems = PRODUCTS.filter(p => !p.id || (!p.id.startsWith('cs-sport-') && p.id !== 'cs-id-holder-only' && p.id !== 'cs-id-lanyard-only'));
 
       if (sportItems.length > 0) {
         const blueItem = sportItems.find(p => p.id === 'cs-sport-blue') || sportItems[0];
@@ -1280,25 +1345,46 @@
           `;
         }
 
-        // Dedicated Card for School ID Card Holder & Lanyard (Color by Grade, No Size Selection)
+        // Dedicated Card for School ID Card Holder & Lanyard (Color by Grade & Package Selection)
         if (prod.id === 'cs-id-holder') {
           const currentVariant = ID_HOLDER_VARIANTS[activeIdHolderColor] || ID_HOLDER_VARIANTS.blue;
-          const sizeObj = prod.sizes.find(s => s.size === currentVariant.sizeKey) || prod.sizes[0];
-          const stock = sizeObj ? sizeObj.stock : 100;
+          const currentType = ID_HOLDER_TYPES[activeIdHolderType] || ID_HOLDER_TYPES.set;
+          let stock = 100;
+          if (activeIdHolderType === 'holder') {
+            const holderProd = PRODUCTS.find(p => p.id === 'cs-id-holder-only');
+            stock = holderProd && holderProd.sizes && holderProd.sizes[0] ? holderProd.sizes[0].stock : 150;
+          } else if (activeIdHolderType === 'lanyard') {
+            const lanyardProd = PRODUCTS.find(p => p.id === 'cs-id-lanyard-only');
+            const lSize = lanyardProd && lanyardProd.sizes ? lanyardProd.sizes.find(s => s.size === currentVariant.sizeKey) : null;
+            stock = lSize ? lSize.stock : 85;
+          } else {
+            const sizeObj = prod.sizes.find(s => s.size === currentVariant.sizeKey) || prod.sizes[0];
+            stock = sizeObj ? sizeObj.stock : 100;
+          }
           const isLow = stock <= 10;
+
+          // Card image depends on whether holder-only or with lanyard
+          const displayImage = activeIdHolderType === 'holder' 
+            ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80'
+            : currentVariant.image;
+
+          const displayBadge = activeIdHolderType === 'holder'
+            ? 'ប្រអប់ជ័រការពារកាត'
+            : (activeIdHolderType === 'lanyard' ? `ខ្សែពាក់ក • ${currentVariant.badge}` : `១ ឈុត • ${currentVariant.badge}`);
+
           const stockHtml = isLow
-            ? `<span id="stockIndicator-cs-id-holder" class="text-[10px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded animate-pulse">⚠️ នៅសល់ត្រឹម ${stock} ខ្សែ</span>`
-            : `<span id="stockIndicator-cs-id-holder" class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">នៅសល់ ${stock} ខ្សែ</span>`;
+            ? `<span id="stockIndicator-cs-id-holder" class="text-[10px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded animate-pulse">⚠️ នៅសល់ត្រឹម ${stock}</span>`
+            : `<span id="stockIndicator-cs-id-holder" class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">នៅសល់ ${stock}</span>`;
 
           return `
             <div class="bg-white rounded-2xl border-2 border-slate-200/80 hover:border-school-400 hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden group">
               
               <!-- Image with Badges -->
               <div class="relative h-48 sm:h-52 bg-slate-100 overflow-hidden">
-                <img id="idHolderCardImage" src="${currentVariant.image}" alt="${currentVariant.badge}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                <img id="idHolderCardImage" src="${displayImage}" alt="${displayBadge}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                 <div class="absolute top-2.5 left-2.5 flex flex-col gap-1">
                   <span id="idHolderCardBadge" class="bg-school-700/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm">
-                    ${currentVariant.badge}
+                    ${displayBadge}
                   </span>
                 </div>
                 <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-slate-700 p-1.5 rounded-lg text-[10px] font-semibold flex items-center gap-1 shadow-sm">
@@ -1317,51 +1403,84 @@
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 shrink-0">Free Size</span>
                   </div>
                   <p class="text-[11px] text-slate-500 font-sans">${prod.name}</p>
-                  <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
-                    ${prod.description}
-                  </p>
-
-                  <!-- Color / Grade Selector (No Size Selection) -->
+                  
+                  <!-- Package Option Selector (1 Set, Card Holder Only, Lanyard Only) -->
                   <div class="mt-2.5 pt-2 border-t border-slate-100">
                     <label class="block text-[11px] font-bold text-slate-700 mb-1.5">
-                      ជ្រើសពណ៌តាមថ្នាក់ (Color by Grade):
+                      ជ្រើសរើសជម្រើសទិញ (Package Options):
                     </label>
                     <div class="grid grid-cols-3 gap-1">
-                      <button type="button" onclick="selectIdHolderColor('blue')"
-                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'blue' ? 'bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
-                        <span class="flex items-center gap-1 text-[10px]">
-                          <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
-                          <span>ថ្នាក់ ១-២</span>
-                        </span>
-                        <span class="text-[9px] opacity-75">ពណ៌ខៀវ</span>
+                      <button type="button" onclick="selectIdHolderType('set')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderType === 'set' ? 'bg-school-600 text-white border-school-600 shadow-sm font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 font-medium'}">
+                        <span class="text-[10px] leading-tight">១ ឈុត (Set)</span>
+                        <span class="text-[9px] ${activeIdHolderType === 'set' ? 'text-amber-200' : 'text-school-700'} font-bold">6,500 ៛</span>
                       </button>
 
-                      <button type="button" onclick="selectIdHolderColor('orange')"
-                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'orange' ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
-                        <span class="flex items-center gap-1 text-[10px]">
-                          <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
-                          <span>ថ្នាក់ ៣-៤</span>
-                        </span>
-                        <span class="text-[9px] opacity-75">ពណ៌ទឹកក្រូច</span>
+                      <button type="button" onclick="selectIdHolderType('holder')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderType === 'holder' ? 'bg-school-600 text-white border-school-600 shadow-sm font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 font-medium'}">
+                        <span class="text-[10px] leading-tight">តែប្រអប់កាត</span>
+                        <span class="text-[9px] ${activeIdHolderType === 'holder' ? 'text-amber-200' : 'text-school-700'} font-bold">1,500 ៛</span>
                       </button>
 
-                      <button type="button" onclick="selectIdHolderColor('green')"
-                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'green' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
-                        <span class="flex items-center gap-1 text-[10px]">
-                          <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
-                          <span>ថ្នាក់ ៥-៦</span>
-                        </span>
-                        <span class="text-[9px] opacity-75">ពណ៌បៃតង</span>
+                      <button type="button" onclick="selectIdHolderType('lanyard')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderType === 'lanyard' ? 'bg-school-600 text-white border-school-600 shadow-sm font-bold' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 font-medium'}">
+                        <span class="text-[10px] leading-tight">តែខ្សែពាក់ក</span>
+                        <span class="text-[9px] ${activeIdHolderType === 'lanyard' ? 'text-amber-200' : 'text-school-700'} font-bold">5,000 ៛</span>
                       </button>
                     </div>
                   </div>
+
+                  <!-- Color / Grade Selector (Active for Set and Lanyard Only) -->
+                  ${currentType.hasColor ? `
+                    <div class="mt-2 pt-2 border-t border-slate-100">
+                      <label class="block text-[11px] font-bold text-slate-700 mb-1.5">
+                        ជ្រើសពណ៌ខ្សែតាមថ្នាក់ (Lanyard Color by Grade):
+                      </label>
+                      <div class="grid grid-cols-3 gap-1">
+                        <button type="button" onclick="selectIdHolderColor('blue')"
+                          class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'blue' ? 'bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                          <span class="flex items-center gap-1 text-[10px]">
+                            <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
+                            <span>ថ្នាក់ ១-២</span>
+                          </span>
+                          <span class="text-[9px] opacity-75">ពណ៌ខៀវ</span>
+                        </button>
+
+                        <button type="button" onclick="selectIdHolderColor('orange')"
+                          class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'orange' ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                          <span class="flex items-center gap-1 text-[10px]">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                            <span>ថ្នាក់ ៣-៤</span>
+                          </span>
+                          <span class="text-[9px] opacity-75">ពណ៌ទឹកក្រូច</span>
+                        </button>
+
+                        <button type="button" onclick="selectIdHolderColor('green')"
+                          class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'green' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                          <span class="flex items-center gap-1 text-[10px]">
+                            <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
+                            <span>ថ្នាក់ ៥-៦</span>
+                          </span>
+                          <span class="text-[9px] opacity-75">ពណ៌បៃតង</span>
+                        </button>
+                      </div>
+                    </div>
+                  ` : `
+                    <div class="mt-2 pt-2 border-t border-slate-100">
+                      <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+                        <span>ប្រអប់ជ័ររឹងថ្លា ការពារមិនឱ្យជ្រាបទឹក ឬបាក់កាត (ពាក់បានគ្រប់ថ្នាក់)</span>
+                      </div>
+                    </div>
+                  `}
+
                 </div>
 
                 <!-- Stock info line (No Size Button Grid) -->
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                   <span class="text-slate-500 flex items-center gap-1">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-school-600"></i>
-                    <span>ទំហំស្តង់ដារ Free Size</span>
+                    <span>${activeIdHolderType === 'holder' ? 'ប្រអប់ជ័រការពារកាត' : 'ទំហំស្តង់ដារ Free Size'}</span>
                   </span>
                   ${stockHtml}
                 </div>
@@ -1370,9 +1489,9 @@
                 <div class="pt-2 flex items-center justify-between gap-2">
                   <div>
                     <div class="text-base md:text-lg font-extrabold text-school-800">
-                      ${prod.priceKhr.toLocaleString()} ៛
+                      ${currentType.priceKhr.toLocaleString()} ៛
                     </div>
-                    <div class="text-[11px] text-slate-400 font-sans">~$${prod.priceUsd.toFixed(2)}</div>
+                    <div class="text-[11px] text-slate-400 font-sans">~$${currentType.priceUsd.toFixed(2)}</div>
                   </div>
 
                   <button onclick="addIdHolderToCart()" class="bg-school-600 hover:bg-school-700 active:scale-95 text-white font-bold py-2 px-3.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-school-600/20 transition">
@@ -1530,9 +1649,14 @@
       openCartDrawer();
     }
 
-    // ID Card Holder & Lanyard Color Handlers (Color by Grade, No Size)
+    // ID Card Holder & Lanyard Color & Type Handlers (Color by Grade, Package Options)
     function selectIdHolderColor(colorKey) {
       activeIdHolderColor = colorKey;
+      renderProducts();
+    }
+
+    function selectIdHolderType(typeKey) {
+      activeIdHolderType = typeKey;
       renderProducts();
     }
 
@@ -1541,9 +1665,38 @@
       if (!prod) return;
 
       const variant = ID_HOLDER_VARIANTS[activeIdHolderColor] || ID_HOLDER_VARIANTS.blue;
-      const sizeObj = prod.sizes.find(s => s.size === variant.sizeKey) || prod.sizes[0];
+      const typeConfig = ID_HOLDER_TYPES[activeIdHolderType] || ID_HOLDER_TYPES.set;
 
-      const cartItemId = `cs-id-holder__${variant.colorCode}`;
+      let cartItemId = '';
+      let prodId = '';
+      let itemNameKh = '';
+      let itemNameEn = '';
+      let itemImage = variant.image;
+      let itemSize = 'ស្តង់ដារ';
+
+      if (activeIdHolderType === 'set') {
+        cartItemId = `cs-id-set__${variant.colorCode}`;
+        prodId = 'cs-id-holder';
+        itemNameKh = `ឈុតប្រអប់កាត + ខ្សែពាក់ក (1 Set) - ${variant.colorKh} (${variant.gradeGroup})`;
+        itemNameEn = `ID Card Set (Holder + Lanyard) - ${variant.colorKh} (${variant.gradeGroup})`;
+        itemSize = variant.colorKh;
+        itemImage = variant.image;
+      } else if (activeIdHolderType === 'holder') {
+        cartItemId = `cs-id-holder-only`;
+        prodId = 'cs-id-holder-only';
+        itemNameKh = `ប្រអប់កាតសិស្ស (Card Holder Only)`;
+        itemNameEn = `School ID Card Holder (Only)`;
+        itemImage = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80';
+        itemSize = 'ស្តង់ដារ';
+      } else if (activeIdHolderType === 'lanyard') {
+        cartItemId = `cs-id-lanyard-only__${variant.colorCode}`;
+        prodId = 'cs-id-lanyard-only';
+        itemNameKh = `ខ្សែពាក់កសិស្ស (Lanyard Only) - ${variant.colorKh} (${variant.gradeGroup})`;
+        itemNameEn = `School ID Lanyard (Only) - ${variant.colorKh} (${variant.gradeGroup})`;
+        itemSize = variant.colorKh;
+        itemImage = variant.image;
+      }
+
       const existing = cart.find(item => item.cartItemId === cartItemId);
 
       if (existing) {
@@ -1551,13 +1704,13 @@
       } else {
         cart.push({
           cartItemId,
-          id: 'cs-id-holder',
-          name: `ID Card Holder & Lanyard - ${variant.colorKh} (${variant.gradeGroup})`,
-          nameKh: `ប្រអប់កាតសិស្ស និងខ្សែពាក់ក - ${variant.colorKh} (${variant.gradeGroup})`,
-          size: variant.colorKh,
-          priceKhr: prod.priceKhr,
-          priceUsd: prod.priceUsd,
-          image: variant.image,
+          id: prodId,
+          name: itemNameEn,
+          nameKh: itemNameKh,
+          size: itemSize,
+          priceKhr: typeConfig.priceKhr,
+          priceUsd: typeConfig.priceUsd,
+          image: itemImage,
           qty: 1
         });
       }
