@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS store_settings (
   id SERIAL PRIMARY KEY,
   shop_name TEXT NOT NULL DEFAULT 'ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម',
-  location TEXT NOT NULL DEFAULT 'ខាងក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម (មុខអគាររដ្ឋបាល)',
+  location TEXT NOT NULL DEFAULT 'ខាងក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម (ជិតតូបលក់អាហារ)',
   phone1 VARCHAR(50) NOT NULL DEFAULT '012 345 678',
   phone2 VARCHAR(50) DEFAULT '098 765 432',
   telegram VARCHAR(100) DEFAULT 'bNha_dev',
@@ -100,7 +100,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE product_variants;
 
 -- 9. Initial Seed Data
 INSERT INTO store_settings (id, shop_name, location, phone1, phone2, telegram, bakong_id)
-VALUES (1, 'ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម', 'ខាងក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម (មុខអគាររដ្ឋបាល)', '012 345 678', '098 765 432', 'bNha_dev', 'cheasim_primary@acleda')
+VALUES (1, 'ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម', 'ខាងក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម (ជិតតូបលក់អាហារ)', '012 345 678', '098 765 432', 'bNha_dev', 'cheasim_primary@acleda')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Products

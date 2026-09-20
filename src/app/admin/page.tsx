@@ -95,7 +95,13 @@ export default function AdminPage() {
       if (savedOrders) setOrders(JSON.parse(savedOrders));
 
       const savedSettings = localStorage.getItem('cs_settings');
-      if (savedSettings) setSettings(JSON.parse(savedSettings));
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (!parsed.location || parsed.location.includes('មុខអគាររដ្ឋបាល')) {
+          parsed.location = DEFAULT_SETTINGS.location;
+        }
+        setSettings(parsed);
+      }
 
       const savedProducts = localStorage.getItem('cs_products');
       if (savedProducts) {

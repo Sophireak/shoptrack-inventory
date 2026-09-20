@@ -2,7 +2,7 @@ import { Product, IdHolderTypeConfig, IdHolderColorVariant, StoreSettings } from
 
 export const DEFAULT_SETTINGS: StoreSettings = {
   shopName: 'ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម',
-  location: 'ខាងក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម (មុខអគាររដ្ឋបាល)',
+  location: 'ខាងក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម (ជិតតូបលក់អាហារ)',
   phone1: '012 345 678',
   phone2: '098 765 432',
   telegram: 'bNha_dev',

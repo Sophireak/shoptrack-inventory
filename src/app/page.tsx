@@ -108,7 +108,13 @@ export default function StorefrontPage() {
     // 1. Instant local state
     try {
       const savedSettings = localStorage.getItem('cs_settings');
-      if (savedSettings) setSettings(JSON.parse(savedSettings));
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (!parsed.location || parsed.location.includes('មុខអគាររដ្ឋបាល')) {
+          parsed.location = DEFAULT_SETTINGS.location;
+        }
+        setSettings(parsed);
+      }
 
       const savedCart = localStorage.getItem('cs_cart');
       if (savedCart) setCart(JSON.parse(savedCart));
@@ -492,7 +498,7 @@ export default function StorefrontPage() {
               <span className="text-school-700 font-black">សម្តេចជាស៊ីម</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
-              ពិនិត្យមើលស្តុកទំហំ និងពណ៌ផ្លូវការតាមកម្រិតថ្នាក់ (ថ្នាក់ទី ១ ដល់ ទី ៦) ភ្លាមៗ។ អាចកក់ទុកតាម Telegram ឬមកទិញផ្ទាល់នៅបញ្ជរមុខអគាររដ្ឋបាល។
+              ពិនិត្យមើលស្តុកទំហំ និងពណ៌ផ្លូវការតាមកម្រិតថ្នាក់ (ថ្នាក់ទី ១ ដល់ ទី ៦) ភ្លាមៗ។ អាចកក់ទុកតាម Telegram ឬមកទិញផ្ទាល់នៅបញ្ជរជិតតូបលក់អាហារ។
             </p>
             
             {/* Direct Contact / Actions for Parents */}
@@ -517,7 +523,7 @@ export default function StorefrontPage() {
 
               <div className="hidden lg:flex items-center gap-1 text-xs text-slate-500 pl-2">
                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                <span>មុខអគាររដ្ឋបាលសាលា</span>
+                <span>ជិតតូបលក់អាហារ</span>
               </div>
             </div>
           </div>
@@ -586,7 +592,25 @@ export default function StorefrontPage() {
           </p>
           <p>ទីតាំង៖ {settings.location} · ទំនាក់ទំនង៖ {settings.phone1} / {settings.phone2}</p>
           <p className="text-[11px] text-slate-400 font-sans">
-            Built with Next.js & Supabase by Sophireak (@bNha_dev)
+            បង្កើតឡើងដោយក្តីស្រលាញ់សម្រាប់សាលាបឋមសិក្សា សម្តេចជាស៊ីម · Developed by{' '}
+            <a
+              href="https://sophireak.github.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-school-700 hover:text-school-900 font-bold underline underline-offset-2 transition"
+            >
+              Sophireak
+            </a>{' '}
+            (
+            <a
+              href="https://t.me/bNha_dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sky-600 hover:text-sky-700 font-medium hover:underline transition"
+            >
+              @bNha_dev
+            </a>
+            )
           </p>
         </div>
       </footer>

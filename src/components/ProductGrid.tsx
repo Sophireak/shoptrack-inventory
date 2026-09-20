@@ -100,7 +100,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             </span>
           </div>
           <p className="text-[11px] text-emerald-800/90 pl-4.5">
-            👕 <strong>សាកល្បងទំហំដោយឥតគិតថ្លៃ៖</strong> ប្រសិនបើមិនច្បាស់ពីទំហំ អាចនាំកូនមកសាកផ្ទាល់នៅបញ្ជរមុខអគាររដ្ឋបាល ឬចុច &quot;សួរ Telegram&quot;។
+            👕 <strong>សាកល្បងទំហំដោយឥតគិតថ្លៃ៖</strong> ប្រសិនបើមិនច្បាស់ពីទំហំ អាចនាំកូនមកសាកផ្ទាល់នៅបញ្ជរជិតតូបលក់អាហារ ឬចុច &quot;សួរ Telegram&quot;។
           </p>
         </div>
         <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl self-start md:self-auto shrink-0 border border-emerald-300/40">
