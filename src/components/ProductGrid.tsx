@@ -86,19 +86,24 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
         </div>
       </div>
 
-      {/* Live Stock Notification Bar */}
-      <div className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-emerald-950">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span className="font-bold">
-            ទិន្នន័យស្តុកផ្សាយផ្ទាល់ពីបញ្ជរ៖
-          </span>
-          <span className="text-emerald-800">
-            លោកអ្នកអាចមើលចំនួនស្តុកលើទំហំនីមួយៗ ឬចុច &quot;សួរ Telegram&quot; ដើម្បីកក់ទុកមុន។
-          </span>
+      {/* Live Stock & Fitting Notification Bar */}
+      <div className="mb-6 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/90 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs text-emerald-950">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="font-bold">
+              ទិន្នន័យស្តុកផ្សាយផ្ទាល់ពីបញ្ជរក្នុងសាលា៖
+            </span>
+            <span className="text-emerald-800">
+              មានបង្ហាញចំនួនស្តុក និងទម្ងន់កូន (គីឡូ) លើទំហំនីមួយៗច្បាស់ៗ។
+            </span>
+          </div>
+          <p className="text-[11px] text-emerald-800/90 pl-4.5">
+            👕 <strong>សាកល្បងទំហំដោយឥតគិតថ្លៃ៖</strong> ប្រសិនបើមិនច្បាស់ពីទំហំ អាចនាំកូនមកសាកផ្ទាល់នៅបញ្ជរមុខអគាររដ្ឋបាល ឬចុច &quot;សួរ Telegram&quot;។
+          </p>
         </div>
-        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md self-start sm:self-auto shrink-0">
-          🟢 មានទំនិញគ្រប់មុខ
+        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl self-start md:self-auto shrink-0 border border-emerald-300/40">
+          🟢 មានស្តុកគ្រប់ទំហំ
         </span>
       </div>
 

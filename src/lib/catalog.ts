@@ -70,6 +70,27 @@ export const ID_HOLDER_VARIANTS: Record<'blue' | 'orange' | 'green', IdHolderCol
   },
 };
 
+export interface SizeWeightInfo {
+  weight: string;
+  height: string;
+  gradeHint: string;
+}
+
+export const SIZE_WEIGHT_GUIDE: Record<string, SizeWeightInfo> = {
+  '20': { weight: '16-19 kg', height: '110-118 cm', gradeHint: 'ថ្នាក់ទី ១' },
+  '22': { weight: '19-23 kg', height: '118-125 cm', gradeHint: 'ថ្នាក់ទី ១-២' },
+  '24': { weight: '23-27 kg', height: '125-132 cm', gradeHint: 'ថ្នាក់ទី ២-៣' },
+  '26': { weight: '27-32 kg', height: '132-138 cm', gradeHint: 'ថ្នាក់ទី ៣-៤' },
+  '28': { weight: '32-37 kg', height: '138-145 cm', gradeHint: 'ថ្នាក់ទី ៤-៥' },
+  '30': { weight: '37-43 kg', height: '145-152 cm', gradeHint: 'ថ្នាក់ទី ៥-៦' },
+  '32': { weight: '43-50 kg', height: '150-158 cm', gradeHint: 'ថ្នាក់ទី ៦ (មាឌធំ)' },
+  'M': { weight: '40-47 kg', height: '148-156 cm', gradeHint: 'ថ្នាក់ទី ៥-៦' },
+  'L': { weight: '48-55 kg', height: '155-162 cm', gradeHint: 'ថ្នាក់ទី ៦' },
+  'XL': { weight: '55+ kg', height: '160+ cm', gradeHint: 'ថ្នាក់ទី ៦ (មាឌធំ)' },
+  'ស្តង់ដារ (Free Size)': { weight: 'ទូទៅ', height: 'ទូទៅ', gradeHint: 'គ្រប់កម្រិតថ្នាក់' },
+  'ស្តង់ដារ': { weight: 'ទូទៅ', height: 'ទូទៅ', gradeHint: 'គ្រប់កម្រិតថ្នាក់' },
+};
+
 export const BASE_PRODUCTS: Product[] = [
   {
     id: 'cs-boy-shirt',

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Plus, Ruler, Sparkles, MessageCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Product, SportVariant } from '@/types';
+import { SIZE_WEIGHT_GUIDE } from '@/lib/catalog';
 
 interface SportUniformCardProps {
   product: Product;
@@ -30,9 +31,10 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
   const stock = currentSizeObj ? currentSizeObj.stock : 10;
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 5;
+  const currentWeightInfo = SIZE_WEIGHT_GUIDE[activeSize];
 
   const telegramMessage = encodeURIComponent(
-    `សួស្តីបង! ខ្ញុំចង់សួរពីស្តុក៖ ឈុតកីឡាសាលា ${currentVariant.colorKh} (${currentVariant.gradeGroup}) ទំហំ ${activeSize} តើនៅមានក្នុងស្តុកអត់បង?`
+    `សួស្តីបង! ខ្ញុំចង់សួរពីស្តុក៖ ឈុតកីឡាសាលា ${currentVariant.colorKh} (${currentVariant.gradeGroup}) ទំហំ ${activeSize}។ កូនខ្ញុំទម្ងន់ប្រហែល...គីឡូ តើពាក់ត្រូវអត់បង?`
   );
   const telegramUrl = `https://t.me/bNha_dev?text=${telegramMessage}`;
 
@@ -152,7 +154,7 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
           </div>
         </div>
 
-        {/* Sizing Selector with live availability */}
+        {/* Sizing Selector with live availability and weight */}
         <div className="pt-2 border-t border-slate-100">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <label className="font-bold text-slate-700">ជ្រើសទំហំ (Size):</label>
@@ -177,13 +179,14 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
             {currentVariant.sizes.map((s) => {
               const outOfStock = s.stock === 0;
               const isSelected = activeSize === s.size;
+              const guide = SIZE_WEIGHT_GUIDE[s.size];
               return (
                 <button
                   key={s.size}
                   type="button"
                   disabled={outOfStock}
                   onClick={() => onChangeSize(s.size)}
-                  className={`py-1.5 px-0.5 rounded-lg border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                  className={`py-1 px-0.5 rounded-lg border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                     isSelected
                       ? 'bg-school-700 text-white border-school-700 shadow-xs font-bold'
                       : outOfStock
@@ -192,15 +195,24 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
                   }`}
                 >
                   <span className="text-xs font-bold">{s.size}</span>
+                  {guide && guide.weight !== 'ទូទៅ' && (
+                    <span
+                      className={`text-[8px] leading-tight ${
+                        isSelected ? 'text-amber-200' : 'text-slate-500'
+                      }`}
+                    >
+                      ~{guide.weight}
+                    </span>
+                  )}
                   <span
-                    className={`text-[9px] ${
+                    className={`text-[8.5px] ${
                       isSelected
-                        ? 'text-amber-200'
+                        ? 'text-white'
                         : outOfStock
                         ? 'text-slate-400'
                         : s.stock <= 5
                         ? 'text-rose-600 font-bold'
-                        : 'text-slate-500'
+                        : 'text-emerald-600 font-semibold'
                     }`}
                   >
                     {outOfStock ? 'អស់' : `សល់ ${s.stock}`}
@@ -209,6 +221,21 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
               );
             })}
           </div>
+
+          {/* Child Weight Recommendation Box for Selected Size */}
+          {currentWeightInfo && currentWeightInfo.weight !== 'ទូទៅ' && (
+            <div className="mt-2 p-1.5 rounded-lg bg-blue-50/80 border border-blue-200/80 text-[11px] text-blue-900 flex items-center justify-between">
+              <span className="font-semibold">⚖️ ទំហំ {activeSize} ត្រូវនឹងកូន៖</span>
+              <span className="font-bold text-school-800">
+                ទម្ងន់ ~{currentWeightInfo.weight} ({currentWeightInfo.height})
+              </span>
+            </div>
+          )}
+
+          {/* Fitting Reassurance */}
+          <p className="text-[10px] text-slate-500 text-center pt-1.5">
+            👕 អាចមកសាកល្បងទំហំផ្ទាល់នៅបញ្ជរសាលាបាន ឬឆាតសួរ Telegram
+          </p>
         </div>
 
         {/* Price & Action Buttons */}

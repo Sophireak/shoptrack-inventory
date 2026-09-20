@@ -15,12 +15,12 @@ export const GradeAdvisor: React.FC<GradeAdvisorProps> = ({
   onScrollToCatalog,
 }) => {
   const grades = [
-    { num: 1, label: 'ថ្នាក់ទី ១', colorName: 'ពណ៌ខៀវ', colorBg: 'bg-blue-600', dotBg: 'bg-blue-500', colorCode: 'blue' },
-    { num: 2, label: 'ថ្នាក់ទី ២', colorName: 'ពណ៌ខៀវ', colorBg: 'bg-blue-600', dotBg: 'bg-blue-500', colorCode: 'blue' },
-    { num: 3, label: 'ថ្នាក់ទី ៣', colorName: 'ពណ៌ទឹកក្រូច', colorBg: 'bg-amber-500', dotBg: 'bg-amber-500', colorCode: 'orange' },
-    { num: 4, label: 'ថ្នាក់ទី ៤', colorName: 'ពណ៌ទឹកក្រូច', colorBg: 'bg-amber-500', dotBg: 'bg-amber-500', colorCode: 'orange' },
-    { num: 5, label: 'ថ្នាក់ទី ៥', colorName: 'ពណ៌បៃតង', colorBg: 'bg-emerald-600', dotBg: 'bg-emerald-500', colorCode: 'green' },
-    { num: 6, label: 'ថ្នាក់ទី ៦', colorName: 'ពណ៌បៃតង', colorBg: 'bg-emerald-600', dotBg: 'bg-emerald-500', colorCode: 'green' },
+    { num: 1, label: 'ថ្នាក់ទី ១', colorName: 'ពណ៌ខៀវ', colorBg: 'bg-blue-600', dotBg: 'bg-blue-500', colorCode: 'blue', sizeHint: 'ទំហំ ២០ - ២២ (~១៦-២៣ kg)' },
+    { num: 2, label: 'ថ្នាក់ទី ២', colorName: 'ពណ៌ខៀវ', colorBg: 'bg-blue-600', dotBg: 'bg-blue-500', colorCode: 'blue', sizeHint: 'ទំហំ ២២ - ២៤ (~១៩-២៧ kg)' },
+    { num: 3, label: 'ថ្នាក់ទី ៣', colorName: 'ពណ៌ទឹកក្រូច', colorBg: 'bg-amber-500', dotBg: 'bg-amber-500', colorCode: 'orange', sizeHint: 'ទំហំ ២៤ - ២៦ (~២៣-៣២ kg)' },
+    { num: 4, label: 'ថ្នាក់ទី ៤', colorName: 'ពណ៌ទឹកក្រូច', colorBg: 'bg-amber-500', dotBg: 'bg-amber-500', colorCode: 'orange', sizeHint: 'ទំហំ ២៦ - ២៨ (~២៧-៣៧ kg)' },
+    { num: 5, label: 'ថ្នាក់ទី ៥', colorName: 'ពណ៌បៃតង', colorBg: 'bg-emerald-600', dotBg: 'bg-emerald-500', colorCode: 'green', sizeHint: 'ទំហំ ២៨ - ៣០ (~៣២-៤៣ kg)' },
+    { num: 6, label: 'ថ្នាក់ទី ៦', colorName: 'ពណ៌បៃតង', colorBg: 'bg-emerald-600', dotBg: 'bg-emerald-500', colorCode: 'green', sizeHint: 'ទំហំ ៣០ ដល់ XL (~៣៧-៥៥+ kg)' },
   ];
 
   const activeGradeObj = grades.find(g => g.num === selectedGrade) || grades[0];
@@ -38,7 +38,7 @@ export const GradeAdvisor: React.FC<GradeAdvisorProps> = ({
               ជ្រើសរើសកម្រិតថ្នាក់កូនរបស់អ្នក
             </h3>
             <p className="text-xs text-slate-500">
-              ប្រព័ន្ធនឹងបង្ហាញពណ៌ និងទំហំផ្លូវការដោយស្វ័យប្រវត្តិ
+              ប្រព័ន្ធនឹងបង្ហាញពណ៌ និងទំហំទូទៅតាមកម្រិតថ្នាក់ដោយស្វ័យប្រវត្តិ
             </p>
           </div>
         </div>
@@ -84,15 +84,20 @@ export const GradeAdvisor: React.FC<GradeAdvisorProps> = ({
         })}
       </div>
 
-      {/* Selected Grade Live Helper Banner */}
-      <div className="mt-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span className="text-slate-800 font-bold">
-            កូនរៀន{activeGradeObj.label} ➔ ឈុតកីឡា ({activeGradeObj.colorName}) & ខ្សែពាក់កាត ({activeGradeObj.colorName})
-          </span>
+      {/* Selected Grade Live Helper Banner with Weight Recommendation */}
+      <div className="mt-3.5 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="text-slate-900 font-bold">
+              កូនរៀន{activeGradeObj.label} ➔ ឈុតកីឡា ({activeGradeObj.colorName}) & ខ្សែពាក់កាត ({activeGradeObj.colorName})
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-600 pl-6">
+            💡 ទំហំទូទៅ៖ <span className="font-bold text-school-700">{activeGradeObj.sizeHint}</span> (ប្រសិនបើកូនមាឌធំ អាចជ្រើសរើសធំជាង ១ លេខ)
+          </p>
         </div>
-        <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg font-bold border border-emerald-200 self-start sm:self-auto">
+        <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg font-bold border border-emerald-200 self-start md:self-auto shrink-0">
           🟢 មានស្តុកគ្រប់ទំហំនៅបញ្ជរ
         </div>
       </div>
