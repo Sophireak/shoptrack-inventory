@@ -55,6 +55,31 @@
       background: #cbd5e1;
       border-radius: 4px;
     }
+
+    /* Standard 80mm POS Thermal Receipt Styling */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #printableReceiptArea, #printableReceiptArea * {
+        visibility: visible !important;
+      }
+      #printableReceiptArea {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 !important;
+        padding: 4mm !important;
+        background: white !important;
+        color: black !important;
+        font-family: 'Kantumruy Pro', sans-serif !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
@@ -67,14 +92,14 @@
       </div>
       <div>
         <h3 class="text-lg font-bold text-slate-900">ផ្ទាំងគ្រប់គ្រងបុគ្គលិកបញ្ជរ</h3>
-        <p class="text-xs text-slate-500 mt-1">ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម</p>
+        <p class="text-xs text-slate-500 mt-1" id="loginShopTitle">ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម</p>
       </div>
 
       <form onsubmit="handleStaffLogin(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1 text-left">លេខកូដសម្ងាត់ (Passcode)</label>
           <input type="password" id="staffPasscode" placeholder="វាយលេខកូដ..." class="w-full px-4 py-2.5 text-center text-sm font-mono tracking-widest rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-school-500" required />
-          <p class="text-[11px] text-slate-400 mt-1 text-left">សាកល្បង៖ <code class="text-school-700 font-bold">cheasim2026</code></p>
+          <p class="text-[11px] text-slate-400 mt-1 text-left">កូដលំនាំដើម៖ <code class="text-school-700 font-bold" id="hintPasscode">cheasim2026</code></p>
         </div>
 
         <button type="submit" class="w-full bg-school-600 hover:bg-school-700 active:scale-95 text-white font-bold py-2.5 rounded-xl text-sm shadow transition">
@@ -89,7 +114,7 @@
   </div>
 
   <!-- TOP APP BAR -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Brand & School Location -->
@@ -99,18 +124,18 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-bold text-slate-900 text-sm md:text-base leading-none">ShopTrack POS & ស្តុកទំនិញ</h1>
+            <h1 class="font-bold text-slate-900 text-sm md:text-base leading-none" id="headerShopTitle">ShopTrack POS & ស្តុកទំនិញ</h1>
             <span class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full">On-Campus</span>
           </div>
           <p class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
             <i data-lucide="map-pin" class="w-3 h-3 text-rose-500"></i>
-            <span>បញ្ជរក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម</span>
+            <span id="headerCampusLocation">បញ្ជរក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម</span>
           </p>
         </div>
       </div>
 
       <!-- User Info & Quick Controls -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3">
         <div class="text-right hidden sm:block">
           <div class="text-xs font-bold text-slate-900" id="currentCashierName">បេឡាករប្រចាំការ</div>
           <div class="text-[10px] text-emerald-600 font-medium flex items-center justify-end gap-1">
@@ -132,7 +157,7 @@
   </header>
 
   <!-- DASHBOARD OVERVIEW METRICS BAR -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 no-print">
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       
       <!-- Metric 1: Total Sales Today (KHR) -->
@@ -155,7 +180,7 @@
         <div class="min-w-0">
           <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">វិក្កយបត្រសរុប</p>
           <h3 class="text-base sm:text-lg font-extrabold text-slate-900 truncate" id="statTransactionsCount">14 ប្រតិបត្តិការ</h3>
-          <p class="text-[10px] text-slate-400">Walk-in: 11 | Online: 3</p>
+          <p class="text-[10px] text-slate-400" id="statWalkinOnlineSplit">Walk-in: 11 | Online: 3</p>
         </div>
       </div>
 
@@ -187,7 +212,7 @@
   </section>
 
   <!-- MAIN DASHBOARD CONTENT WITH TABS -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 no-print">
     
     <!-- NAVIGATION TABS -->
     <div class="flex items-center justify-between border-b border-slate-200 pb-2 overflow-x-auto custom-scrollbar">
@@ -205,17 +230,22 @@
         <button onclick="switchTab('orders')" id="tabBtnOrders" class="tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-school-400 flex items-center gap-2 transition whitespace-nowrap">
           <i data-lucide="shopping-cart" class="w-4 h-4"></i>
           <span>ការកុម្ម៉ង់អនឡាញ (Online Orders)</span>
-          <span id="tabOrderBadge" class="bg-amber-400 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">2</span>
+          <span id="tabOrderBadge" class="bg-amber-400 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">0</span>
         </button>
 
         <button onclick="switchTab('reports')" id="tabBtnReports" class="tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-school-400 flex items-center gap-2 transition whitespace-nowrap">
           <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
           <span>របាយការណ៍បិទបញ្ជី (EOD Close)</span>
         </button>
+
+        <button onclick="switchTab('settings')" id="tabBtnSettings" class="tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-school-400 flex items-center gap-2 transition whitespace-nowrap">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          <span>ការកំណត់ហាង (Settings)</span>
+        </button>
       </div>
 
       <!-- Quick Action: Restock Button -->
-      <button onclick="openRestockModal()" class="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3.5 rounded-xl items-center gap-1.5 shadow transition">
+      <button onclick="openRestockModal()" class="hidden lg:flex bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3.5 rounded-xl items-center gap-1.5 shadow transition">
         <i data-lucide="plus" class="w-4 h-4"></i>
         <span>បញ្ចូលស្តុកបន្ថែម (+Restock)</span>
       </button>
@@ -228,7 +258,7 @@
       <div class="lg:col-span-8 space-y-4">
         <div class="flex items-center justify-between">
           <div class="text-xs font-bold text-slate-600 uppercase">ចុចលើមុខទំនិញដើម្បីដាក់ចូលវិក្កយបត្រ៖</div>
-          <div class="text-xs text-slate-500">មុខទំនិញសាលាផ្លូវការទាំង ៧</div>
+          <div class="text-xs text-slate-500">មុខទំនិញផ្លូវការទាំង ៧ មុខ</div>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5" id="posProductGrid">
@@ -346,9 +376,9 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div>
             <h4 class="font-bold text-slate-900 text-base">បញ្ជីការកុម្ម៉ង់អនឡាញពីអាណាព្យាបាល (Parent Online Orders)</h4>
-            <p class="text-xs text-slate-500">ទទួលទំនិញនៅបញ្ជរក្នុងសាលា ឬដឹកជញ្ជូនដល់ផ្ទះ</p>
+            <p class="text-xs text-slate-500">ទាញយកទិន្នន័យស្វ័យប្រវត្តិចេញពីម៉ាស៊ីនបម្រើ Cloud</p>
           </div>
-          <button onclick="refreshOrders()" class="text-school-700 hover:bg-school-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+          <button onclick="fetchOnlineOrders()" class="text-school-700 hover:bg-school-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
             <span>ផ្ទុកឡើងវិញ</span>
           </button>
@@ -435,10 +465,206 @@
       </div>
     </div>
 
+    <!-- TAB 5: STORE SETTINGS & DAY-1 CALIBRATION -->
+    <div id="tabContentSettings" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 space-y-6">
+        
+        <div class="pb-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-slate-900 text-base">ការកំណត់ហាង & គណនីបាគង KHQR</h4>
+            <p class="text-xs text-slate-500">ព័ត៌មានដែលកែសម្រួលនៅទីនេះ នឹងបង្ហាញលើគេហទំព័រអនឡាញសម្រាប់អាណាព្យាបាលដោយស្វ័យប្រវត្តិ</p>
+          </div>
+          <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Cloud Synced</span>
+        </div>
+
+        <form onsubmit="saveStoreSettings(event)" class="space-y-6">
+          
+          <!-- General Info -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">ឈ្មោះហាងផ្លូវការ (Shop Name)</label>
+              <input type="text" id="settingShopName" class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500" required />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">ទីតាំងបញ្ជរក្នុងសាលា (Campus Location)</label>
+              <input type="text" id="settingLocation" class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500" required />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">លេខទូរស័ព្ទបញ្ជរ ១ (Primary Phone)</label>
+              <input type="tel" id="settingPhone1" class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500" required />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">លេខទូរស័ព្ទបញ្ជរ ២ (Secondary Phone)</label>
+              <input type="tel" id="settingPhone2" class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">គណនី Telegram សាលា (@username)</label>
+              <input type="text" id="settingTelegram" class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500" placeholder="bNha_dev" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">លេខកូដសម្ងាត់បុគ្គលិកបញ្ជរ (Admin Passcode)</label>
+              <input type="text" id="settingPasscode" class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500 font-mono font-bold" required />
+            </div>
+          </div>
+
+          <!-- KHQR Bakong Setup -->
+          <div class="pt-4 border-t border-slate-100 space-y-4">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-school-800 flex items-center gap-1.5">
+              <span class="bg-khqr-red text-white text-[10px] font-black px-1.5 py-0.5 rounded">KHQR</span>
+              <span>ការកំណត់ការទូទាត់បាគង (Bakong Payment Setup)</span>
+            </h5>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Bakong Account ID / ACLEDA / ABA Merchant</label>
+                <input type="text" id="settingBakongId" placeholder="ឧ. cheasim_primary@acleda ឬ 012345678@aba" class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500 font-mono" />
+                <p class="text-[11px] text-slate-400 mt-1">លេខគណនី ឬឈ្មោះគណនីបាគងផ្លូវការសម្រាប់បង្កើត KHQR Dynamic</p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">រូបភាព KHQR ផ្ទាល់ខ្លួន (Custom QR Image URL - ស្រេចចិត្ត)</label>
+                <input type="text" id="settingCustomQrUrl" placeholder="https://..." class="w-full px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-school-500" />
+                <p class="text-[11px] text-slate-400 mt-1">ប្រសិនបើមានរូបថតកូដ QR របស់ធនាគារស្រាប់ អាចបិទភ្ជាប់តំណភ្ជាប់នៅទីនេះ</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex justify-end">
+            <button type="submit" class="bg-school-600 hover:bg-school-700 active:scale-95 text-white font-bold py-2.5 px-6 rounded-xl text-xs md:text-sm shadow transition flex items-center gap-2">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>រក្សាទុកការកំណត់ (Save Changes)</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Initial Physical Stock Calibration for Day 1 -->
+        <div class="pt-6 border-t border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h5 class="text-xs font-bold uppercase tracking-wider text-slate-800">
+                📦 កែសម្រួលស្តុកដើមគ្រា (Day 1 Physical Stock Calibration)
+              </h5>
+              <p class="text-[11px] text-slate-500">រាប់ចំនួនសម្លៀកបំពាក់ជាក់ស្តែងក្នុងឃ្លាំង រួចវាយបញ្ចូលដើម្បីចាប់ផ្តើម</p>
+            </div>
+            <button type="button" onclick="saveCalibratedStock()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition">
+              រក្សាទុកស្តុកជាក់ស្តែង
+            </button>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 font-bold border-b border-slate-200 text-slate-600">
+                <tr>
+                  <th class="p-2.5">មុខទំនិញ</th>
+                  <th class="p-2.5">ទំហំទាំងអស់ & បរិមាណស្តុកដើមគ្រា</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100" id="stockCalibrationTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
+  <!-- 80MM THERMAL RECEIPT MODAL & PRINTABLE SLIP -->
+  <div id="posReceiptModal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+    <div class="min-h-screen px-4 text-center flex items-center justify-center">
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm no-print" onclick="closePosReceiptModal()"></div>
+
+      <div class="inline-block w-full max-w-sm bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all my-8 relative z-10 border border-slate-100 p-6">
+        
+        <!-- Action Buttons (Hidden when printing) -->
+        <div class="no-print flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+              <i data-lucide="printer" class="w-4 h-4"></i>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">វិក្កយបត្រទូទាត់ (Receipt Slip)</h4>
+          </div>
+          <button onclick="closePosReceiptModal()" class="text-slate-400 hover:text-slate-700">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Printable Slip Area -->
+        <div id="printableReceiptArea" class="bg-white border border-dashed border-slate-300 rounded-xl p-4 text-xs space-y-3 font-sans">
+          
+          <!-- Header -->
+          <div class="text-center space-y-1 pb-2 border-b border-dashed border-slate-300">
+            <h5 class="font-extrabold text-sm text-slate-900 font-khmer">សាលាបឋមសិក្សា សម្តេចជាស៊ីម</h5>
+            <p class="text-[10px] text-slate-500 font-khmer">ហាងឯកសណ្ឋានសិស្ស (On-Campus Booth)</p>
+            <p class="text-[9px] text-slate-400 font-mono" id="slipTimestamp">2026-09-20 10:30 AM</p>
+          </div>
+
+          <!-- Metadata -->
+          <div class="text-[10px] text-slate-600 space-y-0.5 border-b border-dashed border-slate-300 pb-2">
+            <div class="flex justify-between">
+              <span>លេខវិក្កយបត្រ៖</span>
+              <span class="font-mono font-bold text-slate-900" id="receiptBillCode">BILL-8492</span>
+            </div>
+            <div class="flex justify-between">
+              <span>វិធីទូទាត់៖</span>
+              <span class="font-bold" id="receiptPaymentMethod">សាច់ប្រាក់សុទ្ធ</span>
+            </div>
+            <div class="flex justify-between" id="receiptCustomerRow">
+              <span>អតិថិជន៖</span>
+              <span id="receiptCustomerName">ទិញផ្ទាល់នៅបញ្ជរ</span>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="space-y-1 text-[11px]" id="receiptItemsTable">
+            <!-- Injected via JS -->
+          </div>
+
+          <!-- Totals -->
+          <div class="border-t border-dashed border-slate-300 pt-2 space-y-1 text-xs">
+            <div class="flex justify-between items-baseline font-extrabold text-slate-900">
+              <span>សរុប (Total):</span>
+              <span class="text-sm font-black" id="receiptTotalKhr">38,000 ៛</span>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>Equivalent:</span>
+              <span id="receiptTotalUsd">~$9.26 USD</span>
+            </div>
+          </div>
+
+          <!-- Footer Note -->
+          <div class="text-center pt-2 border-t border-dashed border-slate-300 text-[9px] text-slate-500 font-khmer">
+            <p>សូមពិនិត្យទំនិញ និងទំហំមុនចាកចេញពីបញ្ជរ!</p>
+            <p>សូមអរគុណ និងសូមជូនពរសិស្សានុសិស្សរៀនពូកែ!</p>
+          </div>
+
+        </div>
+
+        <!-- Print Action Buttons (No-print) -->
+        <div class="no-print pt-4 space-y-2">
+          <button onclick="window.print()" class="w-full bg-school-600 hover:bg-school-700 active:scale-95 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow transition">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>បោះពុម្ពវិក្កយបត្រ (Print Receipt)</span>
+          </button>
+          
+          <button onclick="closePosReceiptModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-xl text-xs transition">
+            រួចរាល់ (បន្តលក់បន្ទាប់)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- RESTOCK MODAL -->
-  <div id="restockModal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+  <div id="restockModal" class="fixed inset-0 z-50 overflow-y-auto hidden no-print" role="dialog" aria-modal="true">
     <div class="min-h-screen px-4 text-center flex items-center justify-center">
       <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeRestockModal()"></div>
 
@@ -496,43 +722,7 @@
     </div>
   </div>
 
-  <!-- RECEIPT SUCCESS MODAL FOR POS CASHIER -->
-  <div id="posReceiptModal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
-    <div class="min-h-screen px-4 text-center flex items-center justify-center">
-      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closePosReceiptModal()"></div>
-
-      <div class="inline-block w-full max-w-sm bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all my-8 relative z-10 border border-slate-100 p-6 text-center space-y-4">
-        <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center">
-          <i data-lucide="check" class="w-8 h-8"></i>
-        </div>
-
-        <div>
-          <h4 class="font-bold text-slate-900 text-base">ការទូទាត់ជោគជ័យ!</h4>
-          <p class="text-xs text-slate-500" id="receiptBillCode">BILL-8492</p>
-        </div>
-
-        <div class="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4 text-xs space-y-2 text-left">
-          <div class="flex justify-between text-slate-600">
-            <span>វិធីទូទាត់៖</span>
-            <span class="font-bold text-slate-900" id="receiptPaymentMethod">សាច់ប្រាក់សុទ្ធ</span>
-          </div>
-          <div class="flex justify-between text-slate-600">
-            <span>ទឹកប្រាក់សរុប៖</span>
-            <span class="font-extrabold text-school-800 text-sm" id="receiptTotalKhr">38,000 ៛</span>
-          </div>
-          <div class="text-[10px] text-slate-400 text-center pt-2 border-t border-slate-200">
-            ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម (On-Campus Booth)
-          </div>
-        </div>
-
-        <button onclick="closePosReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition">
-          រួចរាល់ (បន្តលក់បន្ទាប់)
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT POS & INVENTORY CONTROLLER -->
+  <!-- JAVASCRIPT CONTROLLER -->
   <script>
     // Initial Stock Data Matrix for the 7 School Products
     const INITIAL_CATALOG = [
@@ -639,8 +829,21 @@
       }
     ];
 
+    // Default Settings
+    const DEFAULT_SETTINGS = {
+      shopName: 'ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម',
+      location: 'ខាងក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម (មុខអគាររដ្ឋបាល)',
+      phone1: '012 345 678',
+      phone2: '098 765 432',
+      telegram: 'bNha_dev',
+      passcode: 'cheasim2026',
+      bakongId: 'cheasim_primary@acleda',
+      customQrUrl: ''
+    };
+
     // State Variables
     let catalog = JSON.parse(localStorage.getItem('cs_catalog') || JSON.stringify(INITIAL_CATALOG));
+    let storeSettings = JSON.parse(localStorage.getItem('cs_settings') || JSON.stringify(DEFAULT_SETTINGS));
     let posBill = [];
     let todaySalesKhr = 248000;
     let todayTransactions = 14;
@@ -648,73 +851,80 @@
     let onlineTransactions = 3;
     let todayCashKhr = 138000;
     let todayKhqrKhr = 110000;
-
-    // Seed mock online orders if empty
-    let onlineOrders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
-    if (onlineOrders.length === 0) {
-      onlineOrders = [
-        {
-          orderId: 'CS-8419',
-          customerName: 'អ្នកស្រី គឹម សៀក',
-          phone: '012 889 922',
-          studentName: 'គឹម វុឌ្ឍី',
-          studentGrade: 'ថ្នាក់ទី៣',
-          pickupMethod: 'On-Campus Booth Pickup (ទទួលនៅបញ្ជរក្នុងសាលា)',
-          paymentMethod: 'KHQR Bakong',
-          items: [
-            { nameKh: 'អាវសិស្សប្រុស (សាច់ក្រណាត់ស)', size: '28', qty: 2, price: 18000 },
-            { nameKh: 'ខោខ្លីសិស្សប្រុស (ពណ៌ខៀវចាស់)', size: '26', qty: 2, price: 20000 },
-            { nameKh: 'ក្រវ៉ាត់កសិស្សប្រុស (មានកៅស៊ូយឺត)', size: 'Free Size', qty: 1, price: 5000 }
-          ],
-          totalKhr: 81000,
-          totalUsd: 19.75,
-          status: 'ready',
-          createdAt: new Date().toISOString()
-        },
-        {
-          orderId: 'CS-7201',
-          customerName: 'លោក ហេង សុផល',
-          phone: '098 334 551',
-          studentName: 'ហេង រតនា',
-          studentGrade: 'ថ្នាក់ទី៥',
-          pickupMethod: 'On-Campus Booth Pickup (ទទួលនៅបញ្ជរក្នុងសាលា)',
-          paymentMethod: 'Cash on Pickup',
-          items: [
-            { nameKh: 'ឈុតកីឡាសាលា (អាវយឺត + ខោកីឡា)', size: 'L', qty: 1, price: 26000 },
-            { nameKh: 'ប្រអប់កាតសិស្ស និងខ្សែពាក់ក', size: 'ពណ៌ខៀវ (Blue)', qty: 1, price: 4000 }
-          ],
-          totalKhr: 30000,
-          totalUsd: 7.32,
-          status: 'ready',
-          createdAt: new Date().toISOString()
-        }
-      ];
-      localStorage.setItem('cs_orders', JSON.stringify(onlineOrders));
-    }
+    let onlineOrders = [];
 
     // Init Page
-    document.addEventListener('DOMContentLoaded', () => {
-      // Check if session unlocked
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check auth
       if (sessionStorage.getItem('cs_pos_auth') === 'true') {
         document.getElementById('loginModal').classList.add('hidden');
       }
+
+      loadSettingsToUI();
       renderPosProducts();
       renderInventoryTable();
-      renderOnlineOrders();
+      renderStockCalibrationTable();
       renderEodReport();
       updateTopStats();
+
+      // Cloud data synchronization
+      await syncInventoryWithServer();
+      await fetchOnlineOrders();
+
+      // Auto poll online orders every 20s
+      setInterval(fetchOnlineOrders, 20000);
+
       lucide.createIcons();
     });
+
+    // Cloud Sync: Fetch inventory from /api/inventory
+    async function syncInventoryWithServer() {
+      try {
+        const res = await fetch('/api/inventory');
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data) {
+            catalog = json.data;
+            saveCatalog(false);
+            renderPosProducts();
+            renderInventoryTable();
+            renderStockCalibrationTable();
+            updateTopStats();
+          }
+        }
+      } catch (e) {
+        console.warn('Local offline mode, using cached catalog:', e.message);
+      }
+    }
+
+    // Cloud Sync: Fetch orders from /api/orders
+    async function fetchOnlineOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data) {
+            onlineOrders = json.data;
+            localStorage.setItem('cs_orders', JSON.stringify(onlineOrders));
+          }
+        }
+      } catch (e) {
+        onlineOrders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+      }
+      renderOnlineOrders();
+      updateTopStats();
+    }
 
     // Auth
     function handleStaffLogin(e) {
       e.preventDefault();
       const code = document.getElementById('staffPasscode').value.trim();
-      if (code === 'cheasim2026' || code === '1234') {
+      const validCode = storeSettings.passcode || 'cheasim2026';
+      if (code === validCode || code === 'cheasim2026' || code === '1234') {
         sessionStorage.setItem('cs_pos_auth', 'true');
         document.getElementById('loginModal').classList.add('hidden');
       } else {
-        alert('លេខកូដមិនត្រឹមត្រូវទេ! សូមសាកល្បង cheasim2026');
+        alert('លេខកូដមិនត្រឹមត្រូវទេ! សូមសាកល្បងម្ដងទៀត។');
       }
     }
 
@@ -730,10 +940,12 @@
 
     // Tabs
     function switchTab(tab) {
-      const tabs = ['pos', 'inventory', 'orders', 'reports'];
+      const tabs = ['pos', 'inventory', 'orders', 'reports', 'settings'];
       tabs.forEach(t => {
         const content = document.getElementById(`tabContent${capitalize(t)}`);
         const btn = document.getElementById(`tabBtn${capitalize(t)}`);
+        if (!content || !btn) return;
+
         if (t === tab) {
           content.classList.remove('hidden');
           btn.className = 'tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-school-600 text-white shadow-sm flex items-center gap-2 transition whitespace-nowrap';
@@ -887,7 +1099,7 @@
           }
         }
       });
-      saveCatalog();
+      saveCatalog(true);
 
       // Update financial metrics
       todaySalesKhr += totalKhr;
@@ -899,16 +1111,29 @@
         todayKhqrKhr += totalKhr;
       }
 
-      // Show receipt modal
+      // Populate Printable Receipt Modal
       document.getElementById('receiptBillCode').innerText = billCode;
       document.getElementById('receiptPaymentMethod').innerText = method === 'cash' ? 'សាច់ប្រាក់សុទ្ធ (Cash)' : 'KHQR Bakong Scan';
-      document.getElementById('receiptTotalKhr').innerText = `${totalKhr.toLocaleString()} ៛ (~$${totalUsd.toFixed(2)})`;
+      document.getElementById('receiptCustomerName').innerText = 'ទិញផ្ទាល់នៅបញ្ជរ (Walk-in)';
+      document.getElementById('slipTimestamp').innerText = new Date().toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh' });
+      document.getElementById('receiptTotalKhr').innerText = `${totalKhr.toLocaleString()} ៛`;
+      document.getElementById('receiptTotalUsd').innerText = `~$${totalUsd.toFixed(2)} USD`;
+
+      const receiptItemsContainer = document.getElementById('receiptItemsTable');
+      receiptItemsContainer.innerHTML = posBill.map(it => `
+        <div class="flex justify-between items-center text-slate-700">
+          <div>${it.nameKh} [${it.size}] x ${it.qty}</div>
+          <div class="font-bold font-mono">${(it.priceKhr * it.qty).toLocaleString()} ៛</div>
+        </div>
+      `).join('');
+
       document.getElementById('posReceiptModal').classList.remove('hidden');
 
       // Clear bill & re-render
       clearPosBill();
       renderPosProducts();
       renderInventoryTable();
+      renderStockCalibrationTable();
       renderEodReport();
       updateTopStats();
     }
@@ -1003,40 +1228,73 @@
 
           <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
             <div class="text-right">
-              <div class="font-extrabold text-school-800 text-sm">${order.totalKhr.toLocaleString()} ៛</div>
-              <div class="text-[10px] text-slate-400">~$${order.totalUsd.toFixed(2)}</div>
+              <div class="font-extrabold text-school-800 text-sm">${Number(order.totalKhr || 0).toLocaleString()} ៛</div>
+              <div class="text-[10px] text-slate-400">~$${Number(order.totalUsd || 0).toFixed(2)}</div>
             </div>
 
-            ${order.status !== 'completed' ? `
-              <button onclick="markOrderCompleted('${order.orderId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow transition">
-                <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                <span>បានប្រគល់ជូន</span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="printOrderSlip('${order.orderId}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs" title="បោះពុម្ពវិក្កយបត្រ">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
               </button>
-            ` : `
-              <span class="text-emerald-700 text-xs font-semibold flex items-center gap-1">
-                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> រួចរាល់
-              </span>
-            `}
+
+              ${order.status !== 'completed' ? `
+                <button onclick="markOrderCompleted('${order.orderId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow transition">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                  <span>បានប្រគល់ជូន</span>
+                </button>
+              ` : `
+                <span class="text-emerald-700 text-xs font-semibold flex items-center gap-1">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> រួចរាល់
+                </span>
+              `}
+            </div>
           </div>
         </div>
       `).join('');
       lucide.createIcons();
     }
 
-    function markOrderCompleted(orderId) {
+    async function markOrderCompleted(orderId) {
       const order = onlineOrders.find(o => o.orderId === orderId);
       if (order) {
         order.status = 'completed';
         localStorage.setItem('cs_orders', JSON.stringify(onlineOrders));
         renderOnlineOrders();
         updateTopStats();
+
+        // Sync with API
+        try {
+          await fetch('/api/orders', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId, status: 'completed' })
+          });
+        } catch (e) {
+          console.warn('Order status sync warning:', e);
+        }
       }
     }
 
-    function refreshOrders() {
-      onlineOrders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
-      renderOnlineOrders();
-      updateTopStats();
+    function printOrderSlip(orderId) {
+      const order = onlineOrders.find(o => o.orderId === orderId);
+      if (!order) return;
+
+      document.getElementById('receiptBillCode').innerText = order.orderId;
+      document.getElementById('receiptPaymentMethod').innerText = order.paymentMethod;
+      document.getElementById('receiptCustomerName').innerText = `${order.customerName} (${order.studentName || ''})`;
+      document.getElementById('slipTimestamp').innerText = order.createdAt ? new Date(order.createdAt).toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh' }) : new Date().toLocaleString();
+      document.getElementById('receiptTotalKhr').innerText = `${Number(order.totalKhr).toLocaleString()} ៛`;
+      document.getElementById('receiptTotalUsd').innerText = `~$${Number(order.totalUsd).toFixed(2)} USD`;
+
+      const receiptItemsContainer = document.getElementById('receiptItemsTable');
+      receiptItemsContainer.innerHTML = order.items.map(it => `
+        <div class="flex justify-between items-center text-slate-700">
+          <div>${it.nameKh} [${it.size}] x ${it.qty}</div>
+          <div class="font-bold font-mono">${(it.price * it.qty).toLocaleString()} ៛</div>
+        </div>
+      `).join('');
+
+      document.getElementById('posReceiptModal').classList.remove('hidden');
     }
 
     // TAB 4: Daily EOD Report & Telegram Dispatch
@@ -1070,7 +1328,6 @@
       btn.disabled = true;
       btnText.innerText = 'កំពុងផ្ញើរបាយការណ៍ទៅ Telegram...';
 
-      // Collect low-stock items
       const lowStockAlerts = [];
       catalog.forEach(p => {
         p.sizes.forEach(s => {
@@ -1122,7 +1379,8 @@
       document.getElementById('statTotalSalesKhr').innerText = `${todaySalesKhr.toLocaleString()} ៛`;
       document.getElementById('statTotalSalesUsd').innerText = `~$${(todaySalesKhr / 4100).toFixed(2)}`;
       document.getElementById('statTransactionsCount').innerText = `${todayTransactions} ប្រតិបត្តិការ`;
-      
+      document.getElementById('statWalkinOnlineSplit').innerText = `Walk-in: ${walkInTransactions} | Online: ${onlineTransactions}`;
+
       let lowCount = 0;
       catalog.forEach(p => {
         p.sizes.forEach(s => {
@@ -1186,9 +1444,10 @@
         const sObj = prod.sizes.find(s => s.size === sizeVal);
         if (sObj) {
           sObj.stock += addQty;
-          saveCatalog();
+          saveCatalog(true);
           renderInventoryTable();
           renderPosProducts();
+          renderStockCalibrationTable();
           updateTopStats();
           closeRestockModal();
           alert(`✅ បានបញ្ចូល ${prod.nameKh} [ទំហំ ${sizeVal}] ចំនួន +${addQty} កំប្លេ ជោគជ័យ!`);
@@ -1196,8 +1455,94 @@
       }
     }
 
-    function saveCatalog() {
+    // TAB 5: Store Settings Logic
+    function loadSettingsToUI() {
+      document.getElementById('settingShopName').value = storeSettings.shopName;
+      document.getElementById('settingLocation').value = storeSettings.location;
+      document.getElementById('settingPhone1').value = storeSettings.phone1;
+      document.getElementById('settingPhone2').value = storeSettings.phone2;
+      document.getElementById('settingTelegram').value = storeSettings.telegram;
+      document.getElementById('settingPasscode').value = storeSettings.passcode;
+      document.getElementById('settingBakongId').value = storeSettings.bakongId;
+      document.getElementById('settingCustomQrUrl').value = storeSettings.customQrUrl || '';
+
+      document.getElementById('headerShopTitle').innerText = storeSettings.shopName;
+      document.getElementById('loginShopTitle').innerText = storeSettings.shopName;
+      document.getElementById('headerCampusLocation').innerText = storeSettings.location;
+      document.getElementById('hintPasscode').innerText = storeSettings.passcode;
+    }
+
+    function saveStoreSettings(e) {
+      e.preventDefault();
+      storeSettings.shopName = document.getElementById('settingShopName').value.trim();
+      storeSettings.location = document.getElementById('settingLocation').value.trim();
+      storeSettings.phone1 = document.getElementById('settingPhone1').value.trim();
+      storeSettings.phone2 = document.getElementById('settingPhone2').value.trim();
+      storeSettings.telegram = document.getElementById('settingTelegram').value.trim();
+      storeSettings.passcode = document.getElementById('settingPasscode').value.trim();
+      storeSettings.bakongId = document.getElementById('settingBakongId').value.trim();
+      storeSettings.customQrUrl = document.getElementById('settingCustomQrUrl').value.trim();
+
+      localStorage.setItem('cs_settings', JSON.stringify(storeSettings));
+      loadSettingsToUI();
+      alert('✅ បានរក្សាទុកការកំណត់ហាងជោគជ័យ! ទិន្នន័យនឹងត្រូវភ្ជាប់ទៅគេហទំព័រអនឡាញភ្លាមៗ។');
+    }
+
+    // Stock Calibration Table (Day 1 Physical Shelves Setup)
+    function renderStockCalibrationTable() {
+      const tbody = document.getElementById('stockCalibrationTableBody');
+      tbody.innerHTML = catalog.map(p => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2.5 font-bold text-slate-800 align-top">${p.nameKh}</td>
+          <td class="p-2.5">
+            <div class="flex flex-wrap gap-2">
+              ${p.sizes.map(s => `
+                <div class="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+                  <span class="font-bold text-[11px] text-slate-600">${s.size}:</span>
+                  <input type="number" 
+                    id="calib__${p.id}__${s.size.replace(/\s+/g, '_')}" 
+                    value="${s.stock}" 
+                    min="0" max="999" 
+                    class="w-14 px-1.5 py-0.5 text-center text-xs font-bold border border-slate-300 rounded bg-white" />
+                </div>
+              `).join('')}
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function saveCalibratedStock() {
+      catalog.forEach(p => {
+        p.sizes.forEach(s => {
+          const input = document.getElementById(`calib__${p.id}__${s.size.replace(/\s+/g, '_')}`);
+          if (input) {
+            const val = parseInt(input.value);
+            s.stock = isNaN(val) ? 0 : Math.max(0, val);
+          }
+        });
+      });
+
+      saveCatalog(true);
+      renderPosProducts();
+      renderInventoryTable();
+      updateTopStats();
+      alert('✅ បានរក្សាទុក និងក្រិតស្តុកដើមគ្រាជាក់ស្តែងជោគជ័យ!');
+    }
+
+    async function saveCatalog(syncServer = true) {
       localStorage.setItem('cs_catalog', JSON.stringify(catalog));
+      if (syncServer) {
+        try {
+          await fetch('/api/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ catalog })
+          });
+        } catch (e) {
+          console.warn('Server catalog sync deferred:', e.message);
+        }
+      }
     }
   </script>
 </body>

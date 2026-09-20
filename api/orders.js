@@ -1,7 +1,31 @@
 // Vercel Serverless Function: /api/orders
-// Handles School Uniform Orders & Dispatches Telegram Notifications
+// Handles School Uniform Orders, Cloud Synchronization & Telegram Notifications
 
+const fs = require('fs');
+const path = require('path');
 const https = require('https');
+
+const ORDERS_FILE = path.join('/tmp', 'cheasim_orders.json');
+
+function readOrders() {
+  try {
+    if (fs.existsSync(ORDERS_FILE)) {
+      const data = fs.readFileSync(ORDERS_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn('Orders read warning:', e.message);
+  }
+  return [];
+}
+
+function writeOrders(orders) {
+  try {
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('Orders write warning:', e.message);
+  }
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -16,102 +40,136 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  // GET: Fetch all active orders
+  if (req.method === 'GET') {
+    const orders = readOrders();
+    return res.status(200).json({ success: true, data: orders });
   }
 
-  try {
-    const {
-      orderId,
-      customerName,
-      studentName,
-      studentGrade,
-      phone,
-      telegram = '',
-      pickupMethod = 'On-Campus Booth Pickup (ទទួលនៅបញ្ជរក្នុងសាលា)',
-      paymentMethod = 'KHQR Bakong',
-      items = [],
-      totalKhr = 0,
-      totalUsd = 0,
-      notes = ''
-    } = req.body || {};
-
-    if (!customerName || !phone || !items || items.length === 0) {
-      return res.status(400).json({
-        error: 'Missing required order fields (customerName, phone, or items).'
-      });
-    }
-
-    const assignedId = orderId || `CS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const phnomPenhTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh' });
-
-    // Format item list for Telegram
-    let itemsText = '';
-    items.forEach((item, index) => {
-      const sizeTag = item.size ? ` [ទំហំ/Size: ${item.size}]` : '';
-      itemsText += `  ${index + 1}. <b>${escapeHtml(item.nameKh || item.name)}</b>${escapeHtml(sizeTag)} x ${item.qty} = <b>${(item.price * item.qty).toLocaleString()} ៛</b>\n`;
-    });
-
-    const isPickup = pickupMethod.toLowerCase().includes('campus') || pickupMethod.toLowerCase().includes('បញ្ជរ') || pickupMethod.toLowerCase().includes('pickup');
-    const pickupBadge = isPickup ? '🏫 <b>ទទួលនៅបញ្ជរក្នុងសាលា (On-Campus Booth)</b>' : '🛵 <b>ដឹកជញ្ជូនដល់ផ្ទះ (Delivery)</b>';
-
-    const tgMessage = 
-      `🎒 <b>ការបញ្ជាទិញឯកសណ្ឋានថ្មី / NEW UNIFORM ORDER</b>\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
-      `🆔 <b>លេខកូដវិក្កយបត្រ (Order ID):</b> <code>${escapeHtml(assignedId)}</code>\n` +
-      `🏫 <b>សាលារៀន:</b> បឋមសិក្សា សម្តេចជាស៊ីម\n` +
-      `📍 <b>ទីតាំងបញ្ជរ:</b> ខាងក្នុងបរិវេណសាលា (Inside Campus)\n\n` +
-      `👨‍👩‍👧 <b>អាណាព្យាបាល:</b> ${escapeHtml(customerName)}\n` +
-      `📞 <b>លេខទូរស័ព្ទ:</b> <code>${escapeHtml(phone)}</code>\n` +
-      (studentName ? `👦👧 <b>ឈ្មោះសិស្ស:</b> ${escapeHtml(studentName)} (${escapeHtml(studentGrade || 'ទូទៅ')})\n` : '') +
-      (telegram ? `✈️ <b>Telegram:</b> @${escapeHtml(telegram.replace('@', ''))}\n` : '') +
-      `📦 <b>វិធីសាស្រ្តទទួល:</b> ${pickupBadge}\n` +
-      `💳 <b>ការទូទាត់:</b> <b>${escapeHtml(paymentMethod)}</b>\n\n` +
-      `📋 <b>មុខទំនិញដែលបានកុម្ម៉ង់ (Ordered Items):</b>\n` +
-      `${itemsText}\n` +
-      `💰 <b>សរុប (Total):</b> <b>${Number(totalKhr).toLocaleString()} ៛</b> (~$${Number(totalUsd).toFixed(2)})\n` +
-      (notes ? `📝 <b>សម្គាល់:</b> <i>${escapeHtml(notes)}</i>\n` : '') +
-      `⏱ <b>កាលបរិច្ឆេទ:</b> ${phnomPenhTime}\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
-      `👉 <i>សូមរៀបចំទំនិញទុកជូននៅបញ្ជរក្នុងសាលា!</i>`;
-
-    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8407260653:AAF4Ys0ZLGro9oCAr_wZgXkMpwnG8JkrcE0';
-    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-1004328071470';
-
+  // PATCH: Update order status (ready / completed)
+  if (req.method === 'PATCH') {
     try {
-      await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, tgMessage);
-    } catch (tgError) {
-      console.error('Telegram dispatch error:', tgError.message);
+      const { orderId, status } = req.body || {};
+      if (!orderId || !status) {
+        return res.status(400).json({ error: 'Missing orderId or status.' });
+      }
+
+      const orders = readOrders();
+      const match = orders.find(o => o.orderId === orderId);
+      if (match) {
+        match.status = status;
+        match.updatedAt = new Date().toISOString();
+        writeOrders(orders);
+        return res.status(200).json({ success: true, data: match });
+      }
+      return res.status(404).json({ error: 'Order not found.' });
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to update order status.' });
     }
-
-    const orderRecord = {
-      orderId: assignedId,
-      customerName,
-      studentName,
-      studentGrade,
-      phone,
-      telegram,
-      pickupMethod,
-      paymentMethod,
-      items,
-      totalKhr,
-      totalUsd,
-      notes,
-      status: 'pending_pickup',
-      createdAt: new Date().toISOString()
-    };
-
-    return res.status(200).json({
-      success: true,
-      orderId: assignedId,
-      message: 'Order processed successfully and shop staff notified.',
-      data: orderRecord
-    });
-
-  } catch (error) {
-    console.error('Order API error:', error);
-    return res.status(500).json({ error: 'Internal server error processing order.' });
   }
+
+  // POST: Create new parent order
+  if (req.method === 'POST') {
+    try {
+      const {
+        orderId,
+        customerName,
+        studentName,
+        studentGrade,
+        phone,
+        telegram = '',
+        pickupMethod = 'On-Campus Booth Pickup (ទទួលនៅបញ្ជរក្នុងសាលា)',
+        paymentMethod = 'KHQR Bakong',
+        items = [],
+        totalKhr = 0,
+        totalUsd = 0,
+        notes = ''
+      } = req.body || {};
+
+      if (!customerName || !phone || !items || items.length === 0) {
+        return res.status(400).json({
+          error: 'Missing required order fields (customerName, phone, or items).'
+        });
+      }
+
+      const assignedId = orderId || `CS-${Math.floor(1000 + Math.random() * 9000)}`;
+      const phnomPenhTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh' });
+
+      // Format item list for Telegram
+      let itemsText = '';
+      items.forEach((item, index) => {
+        const sizeTag = item.size ? ` [ទំហំ/Size: ${item.size}]` : '';
+        itemsText += `  ${index + 1}. <b>${escapeHtml(item.nameKh || item.name)}</b>${escapeHtml(sizeTag)} x ${item.qty} = <b>${(item.price * item.qty).toLocaleString()} ៛</b>\n`;
+      });
+
+      const isPickup = pickupMethod.toLowerCase().includes('campus') || pickupMethod.toLowerCase().includes('បញ្ជរ') || pickupMethod.toLowerCase().includes('pickup');
+      const pickupBadge = isPickup ? '🏫 <b>ទទួលនៅបញ្ជរក្នុងសាលា (On-Campus Booth)</b>' : '🛵 <b>ដឹកជញ្ជូនដល់ផ្ទះ (Delivery)</b>';
+
+      const tgMessage = 
+        `🎒 <b>ការបញ្ជាទិញឯកសណ្ឋានថ្មី / NEW UNIFORM ORDER</b>\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `🆔 <b>លេខកូដវិក្កយបត្រ (Order ID):</b> <code>${escapeHtml(assignedId)}</code>\n` +
+        `🏫 <b>សាលារៀន:</b> បឋមសិក្សា សម្តេចជាស៊ីម\n` +
+        `📍 <b>ទីតាំងបញ្ជរ:</b> ខាងក្នុងបរិវេណសាលា (Inside Campus)\n\n` +
+        `👨‍👩‍👧 <b>អាណាព្យាបាល:</b> ${escapeHtml(customerName)}\n` +
+        `📞 <b>លេខទូរស័ព្ទ:</b> <code>${escapeHtml(phone)}</code>\n` +
+        (studentName ? `👦👧 <b>ឈ្មោះសិស្ស:</b> ${escapeHtml(studentName)} (${escapeHtml(studentGrade || 'ទូទៅ')})\n` : '') +
+        (telegram ? `✈️ <b>Telegram:</b> @${escapeHtml(telegram.replace('@', ''))}\n` : '') +
+        `📦 <b>វិធីសាស្រ្តទទួល:</b> ${pickupBadge}\n` +
+        `💳 <b>ការទូទាត់:</b> <b>${escapeHtml(paymentMethod)}</b>\n\n` +
+        `📋 <b>មុខទំនិញដែលបានកុម្ម៉ង់ (Ordered Items):</b>\n` +
+        `${itemsText}\n` +
+        `💰 <b>សរុប (Total):</b> <b>${Number(totalKhr).toLocaleString()} ៛</b> (~$${Number(totalUsd).toFixed(2)})\n` +
+        (notes ? `📝 <b>សម្គាល់:</b> <i>${escapeHtml(notes)}</i>\n` : '') +
+        `⏱ <b>កាលបរិច្ឆេទ:</b> ${phnomPenhTime}\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `👉 <i>សូមរៀបចំទំនិញទុកជូននៅបញ្ជរក្នុងសាលា!</i>`;
+
+      const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8407260653:AAF4Ys0ZLGro9oCAr_wZgXkMpwnG8JkrcE0';
+      const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-1004328071470';
+
+      try {
+        await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, tgMessage);
+      } catch (tgError) {
+        console.error('Telegram dispatch error (non-fatal):', tgError.message);
+      }
+
+      const orderRecord = {
+        orderId: assignedId,
+        customerName,
+        studentName,
+        studentGrade,
+        phone,
+        telegram,
+        pickupMethod,
+        paymentMethod,
+        items,
+        totalKhr,
+        totalUsd,
+        notes,
+        status: 'ready',
+        createdAt: new Date().toISOString()
+      };
+
+      // Persist order in serverless cache
+      const currentOrders = readOrders();
+      currentOrders.unshift(orderRecord);
+      writeOrders(currentOrders);
+
+      return res.status(200).json({
+        success: true,
+        orderId: assignedId,
+        message: 'Order processed successfully and shop staff notified.',
+        data: orderRecord
+      });
+
+    } catch (error) {
+      console.error('Order API error:', error);
+      return res.status(500).json({ error: 'Internal server error processing order.' });
+    }
+  }
+
+  return res.status(405).json({ error: 'Method not allowed.' });
 };
 
 function sendTelegramMessage(token, chatId, text) {
