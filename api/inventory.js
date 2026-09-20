@@ -191,9 +191,11 @@ const DEFAULT_CATALOG = [
     priceUsd: 0.37,
     badge: 'តែប្រអប់កាត',
     image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
-    description: 'ប្រអប់ជ័ររឹងថ្លាការពារកាតសិស្ស មិនឱ្យជ្រាបទឹក ឬបាក់កាត (ទំហំស្តង់ដារ Free Size)។',
+    description: 'ប្រអប់ជ័រការពារកាតសិស្ស បែងចែកពណ៌តាមកម្រិតថ្នាក់ (១,៥០០៛)។',
     sizes: [
-      { size: 'ស្តង់ដារ (Standard)', stock: 150 }
+      { size: 'ពណ៌ខៀវ (ថ្នាក់ទី១-២)', stock: 150 },
+      { size: 'ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)', stock: 120 },
+      { size: 'ពណ៌បៃតង (ថ្នាក់ទី៥-៦)', stock: 100 }
     ]
   },
   {

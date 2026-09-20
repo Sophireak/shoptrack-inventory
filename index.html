@@ -1002,9 +1002,11 @@
         priceUsd: 0.37,
         badge: 'តែប្រអប់កាត',
         image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
-        description: 'ប្រអប់ជ័ររឹងថ្លាការពារកាតសិស្ស មិនឱ្យជ្រាបទឹក ឬបាក់កាត (ទំហំស្តង់ដារ Free Size)។',
+        description: 'ប្រអប់កាតសិស្សជ័រការពារកាត បែងចែកពណ៌តាមកម្រិតថ្នាក់ (១,៥០០៛)។',
         sizes: [
-          { size: 'ស្តង់ដារ (Standard)', stock: 150 }
+          { size: 'ពណ៌ខៀវ (ថ្នាក់ទី១-២)', stock: 150 },
+          { size: 'ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)', stock: 120 },
+          { size: 'ពណ៌បៃតង (ថ្នាក់ទី៥-៦)', stock: 100 }
         ]
       },
       {
@@ -1067,7 +1069,7 @@
         priceKhr: 1500,
         priceUsd: 0.37,
         badge: 'តែប្រអប់កាត',
-        hasColor: false
+        hasColor: true
       },
       lanyard: {
         id: 'lanyard',
@@ -1352,7 +1354,8 @@
           let stock = 100;
           if (activeIdHolderType === 'holder') {
             const holderProd = PRODUCTS.find(p => p.id === 'cs-id-holder-only');
-            stock = holderProd && holderProd.sizes && holderProd.sizes[0] ? holderProd.sizes[0].stock : 150;
+            const hSize = holderProd && holderProd.sizes ? holderProd.sizes.find(s => s.size === currentVariant.sizeKey) : null;
+            stock = hSize ? hSize.stock : 120;
           } else if (activeIdHolderType === 'lanyard') {
             const lanyardProd = PRODUCTS.find(p => p.id === 'cs-id-lanyard-only');
             const lSize = lanyardProd && lanyardProd.sizes ? lanyardProd.sizes.find(s => s.size === currentVariant.sizeKey) : null;
@@ -1363,18 +1366,25 @@
           }
           const isLow = stock <= 10;
 
-          // Card image depends on whether holder-only or with lanyard
-          const displayImage = activeIdHolderType === 'holder' 
-            ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80'
-            : currentVariant.image;
+          // Card image depends on variant color
+          const displayImage = currentVariant.image;
 
           const displayBadge = activeIdHolderType === 'holder'
-            ? 'ប្រអប់ជ័រការពារកាត'
+            ? `ប្រអប់កាត • ${currentVariant.badge}`
             : (activeIdHolderType === 'lanyard' ? `ខ្សែពាក់ក • ${currentVariant.badge}` : `១ ឈុត • ${currentVariant.badge}`);
 
           const stockHtml = isLow
             ? `<span id="stockIndicator-cs-id-holder" class="text-[10px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded animate-pulse">⚠️ នៅសល់ត្រឹម ${stock}</span>`
             : `<span id="stockIndicator-cs-id-holder" class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">នៅសល់ ${stock}</span>`;
+
+          let colorSectionLabel = 'ជ្រើសពណ៌តាមថ្នាក់ (Color by Grade):';
+          if (activeIdHolderType === 'holder') {
+            colorSectionLabel = 'ជ្រើសពណ៌ប្រអប់កាតតាមថ្នាក់ (Holder Color by Grade):';
+          } else if (activeIdHolderType === 'lanyard') {
+            colorSectionLabel = 'ជ្រើសពណ៌ខ្សែតាមថ្នាក់ (Lanyard Color by Grade):';
+          } else {
+            colorSectionLabel = 'ជ្រើសពណ៌ឈុតតាមថ្នាក់ (Set Color by Grade):';
+          }
 
           return `
             <div class="bg-white rounded-2xl border-2 border-slate-200/80 hover:border-school-400 hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden group">
@@ -1430,49 +1440,40 @@
                     </div>
                   </div>
 
-                  <!-- Color / Grade Selector (Active for Set and Lanyard Only) -->
-                  ${currentType.hasColor ? `
-                    <div class="mt-2 pt-2 border-t border-slate-100">
-                      <label class="block text-[11px] font-bold text-slate-700 mb-1.5">
-                        ជ្រើសពណ៌ខ្សែតាមថ្នាក់ (Lanyard Color by Grade):
-                      </label>
-                      <div class="grid grid-cols-3 gap-1">
-                        <button type="button" onclick="selectIdHolderColor('blue')"
-                          class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'blue' ? 'bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
-                          <span class="flex items-center gap-1 text-[10px]">
-                            <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
-                            <span>ថ្នាក់ ១-២</span>
-                          </span>
-                          <span class="text-[9px] opacity-75">ពណ៌ខៀវ</span>
-                        </button>
+                  <!-- Color / Grade Selector (Active for all 3: Set, Card Holder, Lanyard) -->
+                  <div class="mt-2 pt-2 border-t border-slate-100">
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1.5">
+                      ${colorSectionLabel}
+                    </label>
+                    <div class="grid grid-cols-3 gap-1">
+                      <button type="button" onclick="selectIdHolderColor('blue')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'blue' ? 'bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                        <span class="flex items-center gap-1 text-[10px]">
+                          <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
+                          <span>ថ្នាក់ ១-២</span>
+                        </span>
+                        <span class="text-[9px] opacity-75">ពណ៌ខៀវ</span>
+                      </button>
 
-                        <button type="button" onclick="selectIdHolderColor('orange')"
-                          class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'orange' ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
-                          <span class="flex items-center gap-1 text-[10px]">
-                            <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
-                            <span>ថ្នាក់ ៣-៤</span>
-                          </span>
-                          <span class="text-[9px] opacity-75">ពណ៌ទឹកក្រូច</span>
-                        </button>
+                      <button type="button" onclick="selectIdHolderColor('orange')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'orange' ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                        <span class="flex items-center gap-1 text-[10px]">
+                          <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                          <span>ថ្នាក់ ៣-៤</span>
+                        </span>
+                        <span class="text-[9px] opacity-75">ពណ៌ទឹកក្រូច</span>
+                      </button>
 
-                        <button type="button" onclick="selectIdHolderColor('green')"
-                          class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'green' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
-                          <span class="flex items-center gap-1 text-[10px]">
-                            <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
-                            <span>ថ្នាក់ ៥-៦</span>
-                          </span>
-                          <span class="text-[9px] opacity-75">ពណ៌បៃតង</span>
-                        </button>
-                      </div>
+                      <button type="button" onclick="selectIdHolderColor('green')"
+                        class="p-1.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${activeIdHolderColor === 'green' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400/20 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 font-medium'}">
+                        <span class="flex items-center gap-1 text-[10px]">
+                          <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
+                          <span>ថ្នាក់ ៥-៦</span>
+                        </span>
+                        <span class="text-[9px] opacity-75">ពណ៌បៃតង</span>
+                      </button>
                     </div>
-                  ` : `
-                    <div class="mt-2 pt-2 border-t border-slate-100">
-                      <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
-                        <span>ប្រអប់ជ័ររឹងថ្លា ការពារមិនឱ្យជ្រាបទឹក ឬបាក់កាត (ពាក់បានគ្រប់ថ្នាក់)</span>
-                      </div>
-                    </div>
-                  `}
+                  </div>
 
                 </div>
 
@@ -1480,7 +1481,7 @@
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                   <span class="text-slate-500 flex items-center gap-1">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-school-600"></i>
-                    <span>${activeIdHolderType === 'holder' ? 'ប្រអប់ជ័រការពារកាត' : 'ទំហំស្តង់ដារ Free Size'}</span>
+                    <span>${activeIdHolderType === 'holder' ? 'ប្រអប់ជ័រពណ៌តាមថ្នាក់' : (activeIdHolderType === 'lanyard' ? 'ខ្សែពាក់កពណ៌តាមថ្នាក់' : 'ឈុតពេញលេញពណ៌តាមថ្នាក់')}</span>
                   </span>
                   ${stockHtml}
                 </div>
@@ -1682,12 +1683,12 @@
         itemSize = variant.colorKh;
         itemImage = variant.image;
       } else if (activeIdHolderType === 'holder') {
-        cartItemId = `cs-id-holder-only`;
+        cartItemId = `cs-id-holder-only__${variant.colorCode}`;
         prodId = 'cs-id-holder-only';
-        itemNameKh = `ប្រអប់កាតសិស្ស (Card Holder Only)`;
-        itemNameEn = `School ID Card Holder (Only)`;
-        itemImage = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80';
-        itemSize = 'ស្តង់ដារ';
+        itemNameKh = `ប្រអប់កាតសិស្ស (Card Holder Only) - ${variant.colorKh} (${variant.gradeGroup})`;
+        itemNameEn = `School ID Card Holder (Only) - ${variant.colorKh} (${variant.gradeGroup})`;
+        itemSize = variant.colorKh;
+        itemImage = variant.image;
       } else if (activeIdHolderType === 'lanyard') {
         cartItemId = `cs-id-lanyard-only__${variant.colorCode}`;
         prodId = 'cs-id-lanyard-only';
