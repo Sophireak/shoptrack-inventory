@@ -33,20 +33,61 @@ export default function StorefrontPage() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
 
-  // Helper to merge saved products with BASE_PRODUCTS
+  // Helper to merge saved products with BASE_PRODUCTS preserving per-size pricing
   const mergeWithBaseProducts = (saved: Product[]): Product[] => {
     const savedMap = new Map(saved.map((p) => [p.id, p]));
     return BASE_PRODUCTS.map((base) => {
       const s = savedMap.get(base.id);
       if (!s) return base;
+
+      const mergedSizes = base.sizes?.map((bs) => {
+        const ss = s.sizes?.find((x) => x.size === bs.size);
+        if (!ss) return bs;
+        return {
+          ...bs,
+          stock: typeof ss.stock === 'number' ? ss.stock : bs.stock,
+          priceKhr: typeof ss.priceKhr === 'number' ? ss.priceKhr : bs.priceKhr,
+          priceUsd: typeof ss.priceUsd === 'number' ? ss.priceUsd : bs.priceUsd,
+          costKhr: typeof ss.costKhr === 'number' ? ss.costKhr : bs.costKhr,
+          costUsd: typeof ss.costUsd === 'number' ? ss.costUsd : bs.costUsd,
+        };
+      });
+
+      let mergedVariants = base.variants;
+      if (base.variants && s.variants) {
+        mergedVariants = {
+          blue: {
+            ...base.variants.blue,
+            sizes: base.variants.blue.sizes.map((bs) => {
+              const ss = s.variants?.blue?.sizes.find((x) => x.size === bs.size);
+              return ss ? { ...bs, ...ss } : bs;
+            }),
+          },
+          orange: {
+            ...base.variants.orange,
+            sizes: base.variants.orange.sizes.map((bs) => {
+              const ss = s.variants?.orange?.sizes.find((x) => x.size === bs.size);
+              return ss ? { ...bs, ...ss } : bs;
+            }),
+          },
+          green: {
+            ...base.variants.green,
+            sizes: base.variants.green.sizes.map((bs) => {
+              const ss = s.variants?.green?.sizes.find((x) => x.size === bs.size);
+              return ss ? { ...bs, ...ss } : bs;
+            }),
+          },
+        };
+      }
+
       return {
         ...base,
         priceKhr: typeof s.priceKhr === 'number' ? s.priceKhr : base.priceKhr,
         priceUsd: typeof s.priceUsd === 'number' ? s.priceUsd : base.priceUsd,
         costKhr: typeof s.costKhr === 'number' ? s.costKhr : (base.costKhr ?? 0),
         costUsd: typeof s.costUsd === 'number' ? s.costUsd : (base.costUsd ?? 0),
-        sizes: s.sizes || base.sizes,
-        variants: s.variants || base.variants,
+        sizes: mergedSizes || s.sizes || base.sizes,
+        variants: mergedVariants || s.variants || base.variants,
       };
     });
   };
@@ -172,6 +213,9 @@ export default function StorefrontPage() {
   const handleAddStandardToCart = (prod: Product, selectedSize: string) => {
     const cartItemId = `${prod.id}__${selectedSize}`;
     const existing = cart.find((it) => it.cartItemId === cartItemId);
+    const targetSize = prod.sizes?.find((s) => s.size === selectedSize);
+    const priceKhr = typeof targetSize?.priceKhr === 'number' ? targetSize.priceKhr : prod.priceKhr;
+    const priceUsd = typeof targetSize?.priceUsd === 'number' ? targetSize.priceUsd : prod.priceUsd;
 
     let updated: CartItem[];
     if (existing) {
@@ -187,8 +231,8 @@ export default function StorefrontPage() {
           name: prod.name,
           nameKh: prod.nameKh,
           size: selectedSize,
-          priceKhr: prod.priceKhr,
-          priceUsd: prod.priceUsd,
+          priceKhr,
+          priceUsd,
           image: prod.image,
           qty: 1,
         },

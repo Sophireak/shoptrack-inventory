@@ -83,11 +83,52 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const { productId, size, stock, priceKhr, costKhr } = await req.json();
+    const { productId, variantKey, size, stock, priceKhr, costKhr } = await req.json();
     const current = getStoredProducts();
 
     const updated = current.map((p) => {
       if (p.id !== productId) return p;
+
+      // If specific size is targeted
+      if (size) {
+        if (p.isVariantGroup && p.variants && variantKey) {
+          const vKey = variantKey as 'blue' | 'orange' | 'green';
+          const targetVariant = p.variants[vKey];
+          if (targetVariant) {
+            const updatedSizes = targetVariant.sizes.map((s) => {
+              if (s.size !== size) return s;
+              return {
+                ...s,
+                ...(typeof stock === 'number' ? { stock } : {}),
+                ...(typeof priceKhr === 'number' ? { priceKhr, priceUsd: Math.round((priceKhr / 4100) * 100) / 100 } : {}),
+                ...(typeof costKhr === 'number' ? { costKhr, costUsd: Math.round((costKhr / 4100) * 100) / 100 } : {}),
+              };
+            });
+            return {
+              ...p,
+              variants: {
+                ...p.variants,
+                [vKey]: { ...targetVariant, sizes: updatedSizes },
+              },
+            };
+          }
+        }
+
+        if (p.sizes) {
+          const updatedSizes = p.sizes.map((s) => {
+            if (s.size !== size) return s;
+            return {
+              ...s,
+              ...(typeof stock === 'number' ? { stock } : {}),
+              ...(typeof priceKhr === 'number' ? { priceKhr, priceUsd: Math.round((priceKhr / 4100) * 100) / 100 } : {}),
+              ...(typeof costKhr === 'number' ? { costKhr, costUsd: Math.round((costKhr / 4100) * 100) / 100 } : {}),
+            };
+          });
+          return { ...p, sizes: updatedSizes };
+        }
+      }
+
+      // If whole product base is targeted (size is null/undefined)
       let updatedProduct = { ...p };
       if (typeof priceKhr === 'number') {
         updatedProduct.priceKhr = priceKhr;
@@ -97,20 +138,13 @@ export async function PUT(req: Request) {
         updatedProduct.costKhr = costKhr;
         updatedProduct.costUsd = Math.round((costKhr / 4100) * 100) / 100;
       }
-      if (size && typeof stock === 'number') {
-        if (updatedProduct.sizes) {
-          updatedProduct.sizes = updatedProduct.sizes.map((s) =>
-            s.size === size ? { ...s, stock } : s
-          );
-        }
-      }
       return updatedProduct;
     });
 
     saveStoredProducts(updated);
     return NextResponse.json({ success: true, message: 'Item updated', data: updated });
   } catch (error) {
-    console.error('Error updating stock:', error);
+    console.error('Error updating stock/price:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

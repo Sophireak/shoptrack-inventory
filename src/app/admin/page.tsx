@@ -23,14 +23,55 @@ export default function AdminPage() {
     return BASE_PRODUCTS.map((base) => {
       const s = savedMap.get(base.id);
       if (!s) return base;
+
+      const mergedSizes = base.sizes?.map((bs) => {
+        const ss = s.sizes?.find((x) => x.size === bs.size);
+        if (!ss) return bs;
+        return {
+          ...bs,
+          stock: typeof ss.stock === 'number' ? ss.stock : bs.stock,
+          priceKhr: typeof ss.priceKhr === 'number' ? ss.priceKhr : bs.priceKhr,
+          priceUsd: typeof ss.priceUsd === 'number' ? ss.priceUsd : bs.priceUsd,
+          costKhr: typeof ss.costKhr === 'number' ? ss.costKhr : bs.costKhr,
+          costUsd: typeof ss.costUsd === 'number' ? ss.costUsd : bs.costUsd,
+        };
+      });
+
+      let mergedVariants = base.variants;
+      if (base.variants && s.variants) {
+        mergedVariants = {
+          blue: {
+            ...base.variants.blue,
+            sizes: base.variants.blue.sizes.map((bs) => {
+              const ss = s.variants?.blue?.sizes.find((x) => x.size === bs.size);
+              return ss ? { ...bs, ...ss } : bs;
+            }),
+          },
+          orange: {
+            ...base.variants.orange,
+            sizes: base.variants.orange.sizes.map((bs) => {
+              const ss = s.variants?.orange?.sizes.find((x) => x.size === bs.size);
+              return ss ? { ...bs, ...ss } : bs;
+            }),
+          },
+          green: {
+            ...base.variants.green,
+            sizes: base.variants.green.sizes.map((bs) => {
+              const ss = s.variants?.green?.sizes.find((x) => x.size === bs.size);
+              return ss ? { ...bs, ...ss } : bs;
+            }),
+          },
+        };
+      }
+
       return {
         ...base,
         priceKhr: typeof s.priceKhr === 'number' ? s.priceKhr : base.priceKhr,
         priceUsd: typeof s.priceUsd === 'number' ? s.priceUsd : base.priceUsd,
         costKhr: typeof s.costKhr === 'number' ? s.costKhr : (base.costKhr ?? 0),
         costUsd: typeof s.costUsd === 'number' ? s.costUsd : (base.costUsd ?? 0),
-        sizes: s.sizes || base.sizes,
-        variants: s.variants || base.variants,
+        sizes: mergedSizes || s.sizes || base.sizes,
+        variants: mergedVariants || s.variants || base.variants,
       };
     });
   };
@@ -172,24 +213,68 @@ export default function AdminPage() {
     broadcastSync('ORDERS_UPDATED', updated);
   };
 
-  // Price & Cost update handler
+  // Price & Cost update handler: supports individual item/size update or whole product
   const handleUpdatePrice = (
     productId: string,
+    variantKey: string | null,
+    size: string | null,
     newSellingPriceKhr: number,
     newBoughtPriceKhr?: number
   ) => {
+    const priceKhr = Math.max(0, newSellingPriceKhr);
+    const priceUsd = Math.round((priceKhr / 4100) * 100) / 100;
+    const costKhr = typeof newBoughtPriceKhr === 'number' ? Math.max(0, newBoughtPriceKhr) : undefined;
+    const costUsd = typeof costKhr === 'number' ? Math.round((costKhr / 4100) * 100) / 100 : undefined;
+
     const updated = products.map((p) => {
       if (p.id !== productId) return p;
-      const priceKhr = Math.max(0, newSellingPriceKhr);
-      const priceUsd = Math.round((priceKhr / 4100) * 100) / 100;
-      const costKhr = newBoughtPriceKhr !== undefined ? Math.max(0, newBoughtPriceKhr) : (p.costKhr ?? 0);
-      const costUsd = Math.round((costKhr / 4100) * 100) / 100;
+
+      // 1. If targeting specific size of Sport Uniform variant
+      if (size && p.isVariantGroup && p.variants && variantKey) {
+        const vKey = variantKey as 'blue' | 'orange' | 'green';
+        const targetVariant = p.variants[vKey];
+        if (!targetVariant) return p;
+
+        const updatedSizes = targetVariant.sizes.map((s) => {
+          if (s.size !== size) return s;
+          return {
+            ...s,
+            priceKhr,
+            priceUsd,
+            ...(typeof costKhr === 'number' ? { costKhr, costUsd } : {}),
+          };
+        });
+
+        return {
+          ...p,
+          variants: {
+            ...p.variants,
+            [vKey]: { ...targetVariant, sizes: updatedSizes },
+          },
+        };
+      }
+
+      // 2. If targeting specific size of a standard product (or sneakers / ID set)
+      if (size && p.sizes) {
+        const updatedSizes = p.sizes.map((s) => {
+          if (s.size !== size) return s;
+          return {
+            ...s,
+            priceKhr,
+            priceUsd,
+            ...(typeof costKhr === 'number' ? { costKhr, costUsd } : {}),
+          };
+        });
+        return { ...p, sizes: updatedSizes };
+      }
+
+      // 3. If updating base product (when size is null)
       return {
         ...p,
         priceKhr,
         priceUsd,
-        costKhr,
-        costUsd,
+        costKhr: typeof costKhr === 'number' ? costKhr : p.costKhr,
+        costUsd: typeof costUsd === 'number' ? costUsd : p.costUsd,
       };
     });
 

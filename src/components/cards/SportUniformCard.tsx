@@ -32,6 +32,8 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 5;
   const currentWeightInfo = SIZE_WEIGHT_GUIDE[activeSize];
+  const activePriceKhr = typeof currentSizeObj?.priceKhr === 'number' ? currentSizeObj.priceKhr : product.priceKhr;
+  const activePriceUsd = typeof currentSizeObj?.priceUsd === 'number' ? currentSizeObj.priceUsd : product.priceUsd;
 
   const telegramMessage = encodeURIComponent(
     `សួស្តីបង! ខ្ញុំចង់សួរពីស្តុក៖ ឈុតកីឡាសាលា ${currentVariant.colorKh} (${currentVariant.gradeGroup}) ទំហំ ${activeSize}។ កូនខ្ញុំទម្ងន់ប្រហែល...គីឡូ តើពាក់ត្រូវអត់បង?`
@@ -242,10 +244,10 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
         <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
             <div className="text-base md:text-lg font-black text-school-800">
-              {product.priceKhr.toLocaleString()} ៛
+              {activePriceKhr.toLocaleString()} ៛
             </div>
             <div className="text-xs text-slate-500 font-sans">
-              ~${product.priceUsd.toFixed(2)}
+              ~${activePriceUsd.toFixed(2)}
             </div>
           </div>
 
@@ -253,7 +255,7 @@ export const SportUniformCard: React.FC<SportUniformCardProps> = ({
             <button
               type="button"
               disabled={isOutOfStock}
-              onClick={() => onAddToCart(currentVariant, activeSize, product.priceKhr, product.priceUsd)}
+              onClick={() => onAddToCart(currentVariant, activeSize, activePriceKhr, activePriceUsd)}
               className={`py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition shadow-xs ${
                 isOutOfStock
                   ? 'bg-slate-200 text-slate-400 cursor-not-allowed'

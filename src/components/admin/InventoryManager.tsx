@@ -11,13 +11,20 @@ import {
   Package,
   TrendingUp,
   Tag,
+  Layers,
 } from 'lucide-react';
 import { Product } from '@/types';
 
 interface InventoryManagerProps {
   products: Product[];
   onUpdateStock: (productId: string, variantKey: string | null, size: string, newStock: number) => void;
-  onUpdatePrice?: (productId: string, newSellingPrice: number, newBoughtPrice?: number) => void;
+  onUpdatePrice?: (
+    productId: string,
+    variantKey: string | null,
+    size: string | null,
+    newSellingPrice: number,
+    newBoughtPrice?: number
+  ) => void;
 }
 
 export const InventoryManager: React.FC<InventoryManagerProps> = ({
@@ -33,11 +40,10 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   let totalRetailKhr = 0;
 
   products.forEach((p) => {
-    const cost = p.costKhr ?? 0;
-    const price = p.priceKhr;
-
     if (p.sizes) {
       p.sizes.forEach((sz) => {
+        const cost = typeof sz.costKhr === 'number' ? sz.costKhr : (p.costKhr ?? 0);
+        const price = typeof sz.priceKhr === 'number' ? sz.priceKhr : p.priceKhr;
         totalUnits += sz.stock;
         totalCostKhr += sz.stock * cost;
         totalRetailKhr += sz.stock * price;
@@ -47,6 +53,8 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
     if (p.isVariantGroup && p.variants) {
       Object.values(p.variants).forEach((v) => {
         v.sizes.forEach((sz) => {
+          const cost = typeof sz.costKhr === 'number' ? sz.costKhr : (p.costKhr ?? 0);
+          const price = typeof sz.priceKhr === 'number' ? sz.priceKhr : p.priceKhr;
           totalUnits += sz.stock;
           totalCostKhr += sz.stock * cost;
           totalRetailKhr += sz.stock * price;
@@ -127,18 +135,18 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
         </div>
       </div>
 
-      {/* 2. Master Product Pricing & Cost Calibration Card */}
+      {/* 2. Master Product Overview & Batch Pricing Card */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h4 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
-              <span>🏷️ កែប្រែថ្លៃដើម និងតម្លៃលក់តាមមុខទំនិញ (Product Price & Cost Setup)</span>
+              <span>🏷️ បញ្ជីមុខទំនិញគោល (Master Product List)</span>
               <span className="bg-school-100 text-school-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                 {products.length} មុខទំនិញ
               </span>
             </h4>
             <p className="text-xs text-slate-500">
-              ការកែប្រែថ្លៃដើម និងតម្លៃលក់នៅទីនេះ នឹងធ្វើបច្ចុប្បន្នភាពលើគ្រប់ទំហំទាំងអស់ និងបង្ហាញលើ Storefront & POS ភ្លាមៗ
+              📌 តម្លៃលក់ និងថ្លៃដើមអាចខុសគ្នាតាមទំហំនីមួយៗ។ ដើម្បីកែប្រែទំហំណាមួយជាក់លាក់ សូមកែប្រែក្នុងតារាងទំហំខាងក្រោម។
             </p>
           </div>
         </div>
@@ -148,29 +156,39 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
             <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
               <tr>
                 <th className="p-3">មុខទំនិញ (Product)</th>
-                <th className="p-3">ប្រភេទ (Category)</th>
-                <th className="p-3">ថ្លៃដើមទិញចូល (Bought Price ៛)</th>
-                <th className="p-3">តម្លៃលក់ចេញ (Selling Price ៛)</th>
-                <th className="p-3">ប្រាក់ចំណេញ / ឯកតា</th>
+                <th className="p-3">ប្រភេទ</th>
+                <th className="p-3">ចន្លោះតម្លៃលក់ (Price Range)</th>
+                <th className="p-3">ថ្លៃដើមលំនាំដើម (Base Cost)</th>
+                <th className="p-3">តម្លៃលក់លំនាំដើម (Base Price)</th>
                 <th className="p-3 text-center">ស្តុកសរុប</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {products.map((p) => {
-                const cost = p.costKhr ?? 0;
-                const price = p.priceKhr;
-                const profit = price - cost;
-                const marginPct = price > 0 ? Math.round((profit / price) * 100) : 0;
-
-                // Total units for this specific product
+                // Collect prices of all sizes for this product
+                const sizePrices: number[] = [];
                 let prodUnits = 0;
+
                 if (p.sizes) {
-                  prodUnits = p.sizes.reduce((sum, s) => sum + s.stock, 0);
+                  p.sizes.forEach((s) => {
+                    prodUnits += s.stock;
+                    sizePrices.push(typeof s.priceKhr === 'number' ? s.priceKhr : p.priceKhr);
+                  });
                 } else if (p.variants) {
                   Object.values(p.variants).forEach((v) => {
-                    prodUnits += v.sizes.reduce((sum, s) => sum + s.stock, 0);
+                    v.sizes.forEach((s) => {
+                      prodUnits += s.stock;
+                      sizePrices.push(typeof s.priceKhr === 'number' ? s.priceKhr : p.priceKhr);
+                    });
                   });
                 }
+
+                const minPrice = sizePrices.length > 0 ? Math.min(...sizePrices) : p.priceKhr;
+                const maxPrice = sizePrices.length > 0 ? Math.max(...sizePrices) : p.priceKhr;
+                const priceDisplay =
+                  minPrice === maxPrice
+                    ? `${minPrice.toLocaleString()} ៛`
+                    : `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} ៛`;
 
                 return (
                   <tr key={p.id} className="hover:bg-slate-50/80 transition">
@@ -194,17 +212,23 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                       </span>
                     </td>
                     <td className="p-3">
+                      <span className="font-bold text-school-700 bg-school-50 px-2 py-1 rounded-lg border border-school-200">
+                        {priceDisplay}
+                      </span>
+                    </td>
+                    <td className="p-3">
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
-                          value={cost}
+                          value={p.costKhr ?? 0}
                           onChange={(e) => {
                             const val = parseInt(e.target.value);
-                            onUpdatePrice?.(p.id, p.priceKhr, isNaN(val) ? 0 : val);
+                            onUpdatePrice?.(p.id, null, null, p.priceKhr, isNaN(val) ? 0 : val);
                           }}
                           step={500}
                           min={0}
-                          className="w-24 px-2.5 py-1.5 text-right font-bold text-xs text-amber-900 bg-amber-50/60 hover:bg-white focus:bg-white border border-amber-200 focus:border-school-500 rounded-lg focus:outline-hidden transition"
+                          title="កែប្រែថ្លៃដើមលំនាំដើម"
+                          className="w-24 px-2 py-1 text-right font-medium text-xs text-amber-900 bg-amber-50/60 hover:bg-white focus:bg-white border border-amber-200 focus:border-school-500 rounded-lg focus:outline-hidden transition"
                         />
                         <span className="text-xs font-bold text-slate-400">៛</span>
                       </div>
@@ -213,32 +237,17 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
-                          value={price}
+                          value={p.priceKhr}
                           onChange={(e) => {
                             const val = parseInt(e.target.value);
-                            onUpdatePrice?.(p.id, isNaN(val) ? 0 : val, p.costKhr ?? 0);
+                            onUpdatePrice?.(p.id, null, null, isNaN(val) ? 0 : val, p.costKhr ?? 0);
                           }}
                           step={500}
                           min={0}
-                          className="w-24 px-2.5 py-1.5 text-right font-black text-xs text-school-700 bg-school-50/60 hover:bg-white focus:bg-white border border-school-200 focus:border-school-500 rounded-lg focus:outline-hidden transition"
+                          title="កែប្រែតម្លៃលក់លំនាំដើម"
+                          className="w-24 px-2 py-1 text-right font-bold text-xs text-school-700 bg-school-50/60 hover:bg-white focus:bg-white border border-school-200 focus:border-school-500 rounded-lg focus:outline-hidden transition"
                         />
                         <span className="text-xs font-bold text-slate-400">៛</span>
-                      </div>
-                    </td>
-                    <td className="p-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`px-2 py-1 rounded-md font-bold text-xs ${
-                            profit >= 0
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-rose-100 text-rose-700'
-                          }`}
-                        >
-                          {profit >= 0 ? `+${profit.toLocaleString()} ៛` : `${profit.toLocaleString()} ៛`}
-                        </span>
-                        <span className="text-[11px] text-slate-400 font-sans font-semibold">
-                          ({marginPct}%)
-                        </span>
                       </div>
                     </td>
                     <td className="p-3 text-center font-bold text-slate-800">
@@ -252,16 +261,17 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
         </div>
       </div>
 
-      {/* 3. Detailed Stock Calibration Table */}
+      {/* 3. Detailed Stock & Price Calibration Table (Per Size / Per Item Editing) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/80">
           <div>
-            <h4 className="font-bold text-slate-900 text-sm sm:text-base">
-              តារាងគ្រប់គ្រងស្តុកតាមទំហំលម្អិត (Inventory Stock Calibration by Size)
+            <h4 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+              <Layers className="w-4 h-4 text-school-600" />
+              <span>តារាងគ្រប់គ្រងតម្លៃ និងស្តុកតាមទំហំនីមួយៗ (Per-Item Pricing & Stock)</span>
             </h4>
-            <p className="text-xs text-slate-500">
-              កែប្រែចំនួនស្តុក ថ្លៃដើម និងតម្លៃលក់ផ្ទាល់ (Updates will sync with storefront & POS in real-time)
+            <p className="text-xs text-emerald-700 font-medium mt-0.5">
+              ✨ អ្នកអាចកំណត់តម្លៃ និងថ្លៃដើមខុសៗគ្នាតាមទំហំនីមួយៗបានដោយឡែកពីគ្នា (Edit each size individually)
             </p>
           </div>
 
@@ -300,8 +310,8 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                   (p.sizes || []).map((sz) => {
                     if (!matchesSearch(p, sz.size, p.badge)) return null;
 
-                    const cost = p.costKhr ?? 0;
-                    const price = p.priceKhr;
+                    const cost = typeof sz.costKhr === 'number' ? sz.costKhr : (p.costKhr ?? 0);
+                    const price = typeof sz.priceKhr === 'number' ? sz.priceKhr : p.priceKhr;
                     const profit = price - cost;
                     const isLow = sz.stock <= 10;
 
@@ -326,7 +336,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                               value={cost}
                               onChange={(e) => {
                                 const val = parseInt(e.target.value);
-                                onUpdatePrice?.(p.id, p.priceKhr, isNaN(val) ? 0 : val);
+                                onUpdatePrice?.(p.id, null, sz.size, price, isNaN(val) ? 0 : val);
                               }}
                               step={500}
                               min={0}
@@ -342,7 +352,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                               value={price}
                               onChange={(e) => {
                                 const val = parseInt(e.target.value);
-                                onUpdatePrice?.(p.id, isNaN(val) ? 0 : val, p.costKhr ?? 0);
+                                onUpdatePrice?.(p.id, null, sz.size, isNaN(val) ? 0 : val, cost);
                               }}
                               step={500}
                               min={0}
@@ -408,8 +418,8 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                     v.sizes.map((sz) => {
                       if (!matchesSearch(p, sz.size, `${v.colorKh} ${v.gradeGroup}`)) return null;
 
-                      const cost = p.costKhr ?? 0;
-                      const price = p.priceKhr;
+                      const cost = typeof sz.costKhr === 'number' ? sz.costKhr : (p.costKhr ?? 0);
+                      const price = typeof sz.priceKhr === 'number' ? sz.priceKhr : p.priceKhr;
                       const profit = price - cost;
                       const isLow = sz.stock <= 5;
 
@@ -436,7 +446,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                                 value={cost}
                                 onChange={(e) => {
                                   const val = parseInt(e.target.value);
-                                  onUpdatePrice?.(p.id, p.priceKhr, isNaN(val) ? 0 : val);
+                                  onUpdatePrice?.(p.id, colKey, sz.size, price, isNaN(val) ? 0 : val);
                                 }}
                                 step={500}
                                 min={0}
@@ -452,7 +462,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                                 value={price}
                                 onChange={(e) => {
                                   const val = parseInt(e.target.value);
-                                  onUpdatePrice?.(p.id, isNaN(val) ? 0 : val, p.costKhr ?? 0);
+                                  onUpdatePrice?.(p.id, colKey, sz.size, isNaN(val) ? 0 : val, cost);
                                 }}
                                 step={500}
                                 min={0}
@@ -518,8 +528,8 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                   (p.sizes || []).map((sz) => {
                     if (!matchesSearch(p, sz.size, 'ID Card')) return null;
 
-                    const cost = p.costKhr ?? 0;
-                    const price = p.priceKhr;
+                    const cost = typeof sz.costKhr === 'number' ? sz.costKhr : (p.costKhr ?? 0);
+                    const price = typeof sz.priceKhr === 'number' ? sz.priceKhr : p.priceKhr;
                     const profit = price - cost;
 
                     return (
@@ -539,7 +549,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                               value={cost}
                               onChange={(e) => {
                                 const val = parseInt(e.target.value);
-                                onUpdatePrice?.(p.id, p.priceKhr, isNaN(val) ? 0 : val);
+                                onUpdatePrice?.(p.id, null, sz.size, price, isNaN(val) ? 0 : val);
                               }}
                               step={500}
                               min={0}
@@ -555,7 +565,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                               value={price}
                               onChange={(e) => {
                                 const val = parseInt(e.target.value);
-                                onUpdatePrice?.(p.id, isNaN(val) ? 0 : val, p.costKhr ?? 0);
+                                onUpdatePrice?.(p.id, null, sz.size, isNaN(val) ? 0 : val, cost);
                               }}
                               step={500}
                               min={0}

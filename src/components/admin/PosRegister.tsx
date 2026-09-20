@@ -72,6 +72,10 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
           it.cartItemId === cartItemId ? { ...it, qty: it.qty + 1 } : it
         );
       }
+      const szObj = variant.sizes.find((s) => s.size === size);
+      const priceKhr = typeof szObj?.priceKhr === 'number' ? szObj.priceKhr : sportProd.priceKhr;
+      const priceUsd = typeof szObj?.priceUsd === 'number' ? szObj.priceUsd : sportProd.priceUsd;
+
       return [
         ...prev,
         {
@@ -80,8 +84,8 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
           name: `Sport Uniform - ${variant.colorKh} (${variant.gradeGroup})`,
           nameKh: `ឈុតកីឡា ${variant.colorKh} (${variant.gradeGroup})`,
           size,
-          priceKhr: sportProd.priceKhr,
-          priceUsd: sportProd.priceUsd,
+          priceKhr,
+          priceUsd,
           image: variant.image,
           qty: 1,
         },
@@ -385,16 +389,20 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
                 <span className="text-[11px] text-slate-400">ទំហំ ៣១ ដល់ ៤២</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {(p.sizes || []).map((sz) => (
-                  <button
-                    key={sz.size}
-                    type="button"
-                    onClick={() => handleAddStandard(p, sz.size, p.priceKhr, p.priceUsd)}
-                    className="px-2.5 py-1.5 bg-slate-50 hover:bg-school-600 hover:text-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 transition cursor-pointer"
-                  >
-                    +{sz.size}
-                  </button>
-                ))}
+                {(p.sizes || []).map((sz) => {
+                  const szPriceKhr = typeof sz.priceKhr === 'number' ? sz.priceKhr : p.priceKhr;
+                  const szPriceUsd = typeof sz.priceUsd === 'number' ? sz.priceUsd : p.priceUsd;
+                  return (
+                    <button
+                      key={sz.size}
+                      type="button"
+                      onClick={() => handleAddStandard(p, sz.size, szPriceKhr, szPriceUsd)}
+                      className="px-2.5 py-1.5 bg-slate-50 hover:bg-school-600 hover:text-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 transition cursor-pointer"
+                    >
+                      +{sz.size}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -414,16 +422,20 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
                   <span className="text-school-700 font-extrabold">{p.priceKhr.toLocaleString()} ៛</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {(p.sizes || [{ size: 'ស្តង់ដារ', stock: 100 }]).map((sz) => (
-                    <button
-                      key={sz.size}
-                      type="button"
-                      onClick={() => handleAddStandard(p, sz.size, p.priceKhr, p.priceUsd)}
-                      className="px-2 py-1 bg-slate-50 hover:bg-school-600 hover:text-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition cursor-pointer"
-                    >
-                      +{sz.size}
-                    </button>
-                  ))}
+                  {(p.sizes || [{ size: 'ស្តង់ដារ', stock: 100 }]).map((sz) => {
+                    const szPriceKhr = typeof sz.priceKhr === 'number' ? sz.priceKhr : p.priceKhr;
+                    const szPriceUsd = typeof sz.priceUsd === 'number' ? sz.priceUsd : p.priceUsd;
+                    return (
+                      <button
+                        key={sz.size}
+                        type="button"
+                        onClick={() => handleAddStandard(p, sz.size, szPriceKhr, szPriceUsd)}
+                        className="px-2 py-1 bg-slate-50 hover:bg-school-600 hover:text-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition cursor-pointer"
+                      >
+                        +{sz.size}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}

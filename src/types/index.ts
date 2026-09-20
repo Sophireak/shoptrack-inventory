@@ -3,6 +3,10 @@ export type ProductCategory = 'all' | 'boy' | 'girl' | 'sport' | 'shoes' | 'supp
 export interface ProductSize {
   size: string;
   stock: number;
+  priceKhr?: number;
+  priceUsd?: number;
+  costKhr?: number;
+  costUsd?: number;
 }
 
 export interface SportVariant {
