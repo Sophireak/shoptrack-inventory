@@ -67,6 +67,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         amount: order.totalKhr,
         billNumber: order.orderId,
         storeLabel: 'Chea Sim Uniform Store',
+        expirationMinutes: 1,
       });
       setDynamicQrUrl(result.dataUrl);
     } catch (err) {

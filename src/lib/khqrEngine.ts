@@ -14,6 +14,7 @@ export interface KhqrPayloadOptions {
   amount?: number;        // e.g. 28000
   billNumber?: string;    // e.g. "CS-1234"
   storeLabel?: string;    // e.g. "Chea Sim Primary Store"
+  expirationMinutes?: number; // e.g. 1
 }
 
 /**
@@ -45,6 +46,7 @@ function emvTag(id: string, value: string): string {
 
 /**
  * Generates an official EMVCo KHQR String with dynamic or static pricing
+ * and mandatory Tag 99 timestamp (Creation & Expiration) for dynamic QR.
  */
 export function generateEmvcoKhqr(options: KhqrPayloadOptions): string {
   const account = (options.accountNumber || '008906861').replace(/\s+/g, '');
@@ -69,13 +71,23 @@ export function generateEmvcoKhqr(options: KhqrPayloadOptions): string {
   }
   const tag62 = sub62 ? emvTag('62', sub62) : '';
 
-  // Tag 54: Amount
+  // Tag 54: Amount & Tag 99: Timestamps (Mandatory for Dynamic KHQR)
   let tag54 = '';
+  let tag99 = '';
   const isDynamic = typeof options.amount === 'number' && options.amount > 0;
+
   if (isDynamic) {
-    // For KHR: integer format (e.g. 28000); for USD: 2 decimal places (e.g. 6.83)
+    // Amount formatting: Integer for KHR, 2 decimals for USD
     const formattedAmount = isKhr ? String(Math.round(options.amount!)) : options.amount!.toFixed(2);
     tag54 = emvTag('54', formattedAmount);
+
+    // Tag 99: Creation and Expiration Timestamps (in milliseconds)
+    const now = Date.now();
+    const expireDurationMs = Math.max(1, options.expirationMinutes || 1) * 60 * 1000;
+    const expireTimestamp = now + expireDurationMs;
+
+    const sub99 = emvTag('00', String(now)) + emvTag('01', String(expireTimestamp));
+    tag99 = emvTag('99', sub99);
   }
 
   // Initiation Method: 12 for Dynamic (with amount), 11 for Static
@@ -86,13 +98,14 @@ export function generateEmvcoKhqr(options: KhqrPayloadOptions): string {
     emvTag('00', '01') +
     emvTag('01', initiationMethod) +
     tag29 +
-    emvTag('52', '0000') +
+    emvTag('52', '5999') +
     emvTag('53', currencyCode) +
     tag54 +
     emvTag('58', 'KH') +
     emvTag('59', merchantName) +
     emvTag('60', merchantCity) +
     tag62 +
+    tag99 +
     '6304';
 
   const checksum = crc16Ccitt(rawPayload);
