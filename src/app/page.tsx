@@ -51,8 +51,20 @@ export default function StorefrontPage() {
     });
   };
 
-  // Load cart, settings, and products from localStorage on mount
+  // BroadcastChannel helper for instant cross-tab sync
+  const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED', payload: any) => {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('cs_store_sync');
+        bc.postMessage({ type, payload });
+        bc.close();
+      } catch {}
+    }
+  };
+
+  // Load cart, settings, and products from localStorage and server API
   useEffect(() => {
+    // 1. Instant local state
     try {
       const savedSettings = localStorage.getItem('cs_settings');
       if (savedSettings) setSettings(JSON.parse(savedSettings));
@@ -67,9 +79,61 @@ export default function StorefrontPage() {
           setProducts(mergeWithBaseProducts(parsed));
         }
       }
-    } catch {
-      // ignore
+    } catch {}
+
+    // 2. Fetch live inventory from server API
+    const fetchLiveInventory = async () => {
+      try {
+        const res = await fetch('/api/inventory');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const merged = mergeWithBaseProducts(json.data);
+            setProducts(merged);
+            try {
+              localStorage.setItem('cs_products', JSON.stringify(merged));
+            } catch {}
+          }
+        }
+      } catch (err) {
+        // Fallback to local
+      }
+    };
+
+    fetchLiveInventory();
+
+    // 3. BroadcastChannel listener for instant cross-tab sync
+    let channel: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      channel = new BroadcastChannel('cs_store_sync');
+      channel.onmessage = (event) => {
+        if (event.data?.type === 'PRODUCTS_UPDATED' && Array.isArray(event.data.payload)) {
+          setProducts(mergeWithBaseProducts(event.data.payload));
+        }
+      };
     }
+
+    // 4. Storage & Focus listeners
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'cs_products' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setProducts(mergeWithBaseProducts(parsed));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', fetchLiveInventory);
+
+    // 5. Periodic poll (every 4s) for cross-device/network sync
+    const interval = setInterval(fetchLiveInventory, 4000);
+
+    return () => {
+      channel?.close();
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', fetchLiveInventory);
+      clearInterval(interval);
+    };
   }, []);
 
   // Save cart to localStorage
@@ -284,7 +348,7 @@ export default function StorefrontPage() {
       // ignore
     }
 
-    // Call /api/orders
+    // Call /api/orders to persist on server
     try {
       await fetch('/api/orders', {
         method: 'POST',
@@ -294,6 +358,51 @@ export default function StorefrontPage() {
     } catch (err) {
       console.warn('Non-fatal API dispatch:', err);
     }
+
+    // Decrement stock for each item sold
+    let currentProducts = [...products];
+    cart.forEach((item) => {
+      currentProducts = currentProducts.map((p) => {
+        if (p.sizes && p.sizes.some((s) => s.size === item.size)) {
+          return {
+            ...p,
+            sizes: p.sizes.map((s) =>
+              s.size === item.size ? { ...s, stock: Math.max(0, s.stock - item.qty) } : s
+            ),
+          };
+        }
+        if (p.variants) {
+          const updatedVariants = { ...p.variants };
+          (['blue', 'orange', 'green'] as const).forEach((ck) => {
+            const v = updatedVariants[ck];
+            if (v && v.sizes.some((s) => s.size === item.size)) {
+              updatedVariants[ck] = {
+                ...v,
+                sizes: v.sizes.map((s) =>
+                  s.size === item.size ? { ...s, stock: Math.max(0, s.stock - item.qty) } : s
+                ),
+              };
+            }
+          });
+          return { ...p, variants: updatedVariants };
+        }
+        return p;
+      });
+    });
+
+    setProducts(currentProducts);
+    try {
+      localStorage.setItem('cs_products', JSON.stringify(currentProducts));
+    } catch {}
+    broadcastSync('PRODUCTS_UPDATED', currentProducts);
+    broadcastSync('ORDERS_UPDATED', [newOrder]);
+
+    // Push updated inventory to server
+    fetch('/api/inventory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentProducts),
+    }).catch(() => {});
 
     // Clear Cart
     saveCart([]);

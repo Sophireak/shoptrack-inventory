@@ -35,8 +35,20 @@ export default function AdminPage() {
     });
   };
 
-  // Load state on mount
+  // BroadcastChannel helper for instant cross-tab sync
+  const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED', payload: any) => {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('cs_store_sync');
+        bc.postMessage({ type, payload });
+        bc.close();
+      } catch {}
+    }
+  };
+
+  // Load state on mount and sync with server
   useEffect(() => {
+    // 1. Instant local state
     try {
       const savedOrders = localStorage.getItem('cs_orders');
       if (savedOrders) setOrders(JSON.parse(savedOrders));
@@ -51,9 +63,88 @@ export default function AdminPage() {
           setProducts(mergeWithBaseProducts(parsed));
         }
       }
-    } catch {
-      // ignore
+    } catch {}
+
+    // 2. Sync from server API
+    const fetchServerData = async () => {
+      try {
+        const [invRes, ordersRes] = await Promise.all([
+          fetch('/api/inventory'),
+          fetch('/api/orders'),
+        ]);
+
+        if (invRes.ok) {
+          const invJson = await invRes.json();
+          if (invJson.success && Array.isArray(invJson.data) && invJson.data.length > 0) {
+            const merged = mergeWithBaseProducts(invJson.data);
+            setProducts(merged);
+            try {
+              localStorage.setItem('cs_products', JSON.stringify(merged));
+            } catch {}
+          }
+        }
+
+        if (ordersRes.ok) {
+          const ordJson = await ordersRes.json();
+          if (ordJson.success && Array.isArray(ordJson.data)) {
+            setOrders((prev) => {
+              const combined = [...ordJson.data];
+              prev.forEach((po) => {
+                if (!combined.some((co) => co.orderId === po.orderId)) {
+                  combined.push(po);
+                }
+              });
+              try {
+                localStorage.setItem('cs_orders', JSON.stringify(combined));
+              } catch {}
+              return combined;
+            });
+          }
+        }
+      } catch (err) {
+        // Fallback to local
+      }
+    };
+
+    fetchServerData();
+
+    // 3. Setup BroadcastChannel & storage listeners
+    let channel: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      channel = new BroadcastChannel('cs_store_sync');
+      channel.onmessage = (event) => {
+        if (event.data?.type === 'PRODUCTS_UPDATED' && Array.isArray(event.data.payload)) {
+          setProducts(mergeWithBaseProducts(event.data.payload));
+        } else if (event.data?.type === 'ORDERS_UPDATED' && Array.isArray(event.data.payload)) {
+          setOrders(event.data.payload);
+        }
+      };
     }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'cs_products' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setProducts(mergeWithBaseProducts(parsed));
+        } catch {}
+      }
+      if (e.key === 'cs_orders' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setOrders(parsed);
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // 4. Poll orders & inventory every 4 seconds
+    const interval = setInterval(fetchServerData, 4000);
+
+    return () => {
+      channel?.close();
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
   }, []);
 
   // Save updated products
@@ -61,9 +152,24 @@ export default function AdminPage() {
     setProducts(updated);
     try {
       localStorage.setItem('cs_products', JSON.stringify(updated));
-    } catch {
-      // ignore
-    }
+    } catch {}
+    broadcastSync('PRODUCTS_UPDATED', updated);
+
+    // Persist to server
+    fetch('/api/inventory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    }).catch((err) => console.warn('Sync to /api/inventory failed:', err));
+  };
+
+  // Save updated orders
+  const saveOrders = (updated: Order[]) => {
+    setOrders(updated);
+    try {
+      localStorage.setItem('cs_orders', JSON.stringify(updated));
+    } catch {}
+    broadcastSync('ORDERS_UPDATED', updated);
   };
 
   // Price & Cost update handler
@@ -166,12 +272,14 @@ export default function AdminPage() {
     };
 
     const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    try {
-      localStorage.setItem('cs_orders', JSON.stringify(updatedOrders));
-    } catch {
-      // ignore
-    }
+    saveOrders(updatedOrders);
+
+    // Sync POS order with server
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder),
+    }).catch((err) => console.warn('Sync POS order to /api/orders failed:', err));
 
     // Decrement stock for each item sold
     let currentProducts = [...products];
@@ -213,12 +321,13 @@ export default function AdminPage() {
     const updated = orders.map((o) =>
       o.orderId === orderId ? { ...o, status: newStatus } : o
     );
-    setOrders(updated);
-    try {
-      localStorage.setItem('cs_orders', JSON.stringify(updated));
-    } catch {
-      // ignore
-    }
+    saveOrders(updated);
+
+    fetch('/api/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, status: newStatus }),
+    }).catch((err) => console.warn('Failed to update order status on server:', err));
   };
 
   // Save Store Settings

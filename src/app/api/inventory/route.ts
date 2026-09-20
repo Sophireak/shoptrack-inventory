@@ -1,6 +1,51 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { BASE_PRODUCTS } from '@/lib/catalog';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { Product } from '@/types';
+
+const dataDir = path.join(process.cwd(), 'data');
+const productsFilePath = path.join(dataDir, 'products.json');
+
+function getStoredProducts(): Product[] {
+  try {
+    if (fs.existsSync(productsFilePath)) {
+      const content = fs.readFileSync(productsFilePath, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const savedMap = new Map(parsed.map((p: Product) => [p.id, p]));
+        return BASE_PRODUCTS.map((base) => {
+          const s = savedMap.get(base.id);
+          if (!s) return base;
+          return {
+            ...base,
+            priceKhr: typeof s.priceKhr === 'number' ? s.priceKhr : base.priceKhr,
+            priceUsd: typeof s.priceUsd === 'number' ? s.priceUsd : base.priceUsd,
+            costKhr: typeof s.costKhr === 'number' ? s.costKhr : (base.costKhr ?? 0),
+            costUsd: typeof s.costUsd === 'number' ? s.costUsd : (base.costUsd ?? 0),
+            sizes: s.sizes || base.sizes,
+            variants: s.variants || base.variants,
+          };
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error reading stored products:', err);
+  }
+  return BASE_PRODUCTS;
+}
+
+function saveStoredProducts(products: Product[]) {
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing stored products:', err);
+  }
+}
 
 export async function GET() {
   try {
@@ -14,26 +59,56 @@ export async function GET() {
       }
     }
 
-    // Fallback to bundled catalog
-    return NextResponse.json({ success: true, data: BASE_PRODUCTS });
+    const data = getStoredProducts();
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error fetching inventory:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    if (Array.isArray(body)) {
+      saveStoredProducts(body);
+      return NextResponse.json({ success: true, message: 'Inventory updated successfully', data: body });
+    }
+    return NextResponse.json({ success: false, error: 'Expected array of products' }, { status: 400 });
+  } catch (error) {
+    console.error('Error saving inventory:', error);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function PUT(req: Request) {
   try {
-    const { productId, size, stock } = await req.json();
+    const { productId, size, stock, priceKhr, costKhr } = await req.json();
+    const current = getStoredProducts();
 
-    if (isSupabaseConfigured && supabase) {
-      await supabase
-        .from('product_variants')
-        .update({ stock_qty: stock })
-        .match({ product_id: productId, size_label: size });
-    }
+    const updated = current.map((p) => {
+      if (p.id !== productId) return p;
+      let updatedProduct = { ...p };
+      if (typeof priceKhr === 'number') {
+        updatedProduct.priceKhr = priceKhr;
+        updatedProduct.priceUsd = Math.round((priceKhr / 4100) * 100) / 100;
+      }
+      if (typeof costKhr === 'number') {
+        updatedProduct.costKhr = costKhr;
+        updatedProduct.costUsd = Math.round((costKhr / 4100) * 100) / 100;
+      }
+      if (size && typeof stock === 'number') {
+        if (updatedProduct.sizes) {
+          updatedProduct.sizes = updatedProduct.sizes.map((s) =>
+            s.size === size ? { ...s, stock } : s
+          );
+        }
+      }
+      return updatedProduct;
+    });
 
-    return NextResponse.json({ success: true, message: 'Stock updated' });
+    saveStoredProducts(updated);
+    return NextResponse.json({ success: true, message: 'Item updated', data: updated });
   } catch (error) {
     console.error('Error updating stock:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
