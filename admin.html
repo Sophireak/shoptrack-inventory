@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ប្រព័ន្ធគ្រប់គ្រងស្តុក & POS | ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម</title>
+
+  <!-- Google Fonts: Kantumruy Pro (Khmer) + Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            school: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#0f3652',
+            },
+            khqr: {
+              red: '#e11900'
+            }
+          },
+          fontFamily: {
+            khmer: ['"Kantumruy Pro"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', '"Kantumruy Pro"', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Kantumruy Pro', 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+
+  <!-- SECURITY LOGIN MODAL OVERLAY -->
+  <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-5">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-school-700 to-school-500 text-white mx-auto flex items-center justify-center shadow-lg shadow-school-600/30">
+        <i data-lucide="lock" class="w-8 h-8 text-amber-300"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-slate-900">ផ្ទាំងគ្រប់គ្រងបុគ្គលិកបញ្ជរ</h3>
+        <p class="text-xs text-slate-500 mt-1">ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម</p>
+      </div>
+
+      <form onsubmit="handleStaffLogin(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1 text-left">លេខកូដសម្ងាត់ (Passcode)</label>
+          <input type="password" id="staffPasscode" placeholder="វាយលេខកូដ..." class="w-full px-4 py-2.5 text-center text-sm font-mono tracking-widest rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-school-500" required />
+          <p class="text-[11px] text-slate-400 mt-1 text-left">សាកល្បង៖ <code class="text-school-700 font-bold">cheasim2026</code></p>
+        </div>
+
+        <button type="submit" class="w-full bg-school-600 hover:bg-school-700 active:scale-95 text-white font-bold py-2.5 rounded-xl text-sm shadow transition">
+          ចូលប្រើប្រព័ន្ធ
+        </button>
+
+        <button type="button" onclick="bypassDemoLogin()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-xl text-xs transition">
+          ចូលរហ័ស (Demo Fast Access)
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOP APP BAR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand & School Location -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-school-700 text-white flex items-center justify-center font-bold shadow-sm">
+          <i data-lucide="graduation-cap" class="w-5 h-5 text-amber-300"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-slate-900 text-sm md:text-base leading-none">ShopTrack POS & ស្តុកទំនិញ</h1>
+            <span class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full">On-Campus</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
+            <i data-lucide="map-pin" class="w-3 h-3 text-rose-500"></i>
+            <span>បញ្ជរក្នុងបរិវេណសាលាបឋមសិក្សា សម្តេចជាស៊ីម</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- User Info & Quick Controls -->
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <div class="text-xs font-bold text-slate-900" id="currentCashierName">បេឡាករប្រចាំការ</div>
+          <div class="text-[10px] text-emerald-600 font-medium flex items-center justify-end gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> កំពុងដំណើរការ
+          </div>
+        </div>
+
+        <a href="/" target="_blank" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1 transition" title="មើលគេហទំព័រអនឡាញ">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          <span class="hidden md:inline">ហាងអនឡាញ</span>
+        </a>
+
+        <button onclick="lockSystem()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="ចាកចេញ / ចាក់សោ">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- DASHBOARD OVERVIEW METRICS BAR -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Metric 1: Total Sales Today (KHR) -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+          <i data-lucide="banknote" class="w-6 h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">ចំណូលលក់ថ្ងៃនេះ</p>
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 truncate" id="statTotalSalesKhr">248,000 ៛</h3>
+          <p class="text-[10px] text-slate-400" id="statTotalSalesUsd">~$60.48</p>
+        </div>
+      </div>
+
+      <!-- Metric 2: Transactions Count -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-school-100 text-school-700 flex items-center justify-center shrink-0">
+          <i data-lucide="receipt" class="w-6 h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">វិក្កយបត្រសរុប</p>
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 truncate" id="statTransactionsCount">14 ប្រតិបត្តិការ</h3>
+          <p class="text-[10px] text-slate-400">Walk-in: 11 | Online: 3</p>
+        </div>
+      </div>
+
+      <!-- Metric 3: Low Stock Warnings -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">ស្តុកជិតអស់ (Low Stock)</p>
+          <h3 class="text-base sm:text-lg font-extrabold text-rose-600 truncate" id="statLowStockCount">4 ទំហំ</h3>
+          <p class="text-[10px] text-slate-400">អាវលេខ 34, ខោលេខ 32...</p>
+        </div>
+      </div>
+
+      <!-- Metric 4: Online Pickups Waiting -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+          <i data-lucide="package" class="w-6 h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">កុម្ម៉ង់រង់ចាំទទួលនៅបញ្ជរ</p>
+          <h3 class="text-base sm:text-lg font-extrabold text-amber-700 truncate" id="statPendingPickupsCount">2 កុម្ម៉ង់</h3>
+          <p class="text-[10px] text-emerald-600 font-semibold">រួចរាល់សម្រាប់ប្រគល់</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MAIN DASHBOARD CONTENT WITH TABS -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    
+    <!-- NAVIGATION TABS -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-2 overflow-x-auto custom-scrollbar">
+      <div class="flex gap-2">
+        <button onclick="switchTab('pos')" id="tabBtnPos" class="tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-school-600 text-white shadow-sm flex items-center gap-2 transition whitespace-nowrap">
+          <i data-lucide="calculator" class="w-4 h-4"></i>
+          <span>ម៉ាស៊ីនគិតលុយ (POS Register)</span>
+        </button>
+
+        <button onclick="switchTab('inventory')" id="tabBtnInventory" class="tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-school-400 flex items-center gap-2 transition whitespace-nowrap">
+          <i data-lucide="boxes" class="w-4 h-4"></i>
+          <span>តារាងស្តុកតាមទំហំ (Stock Matrix)</span>
+        </button>
+
+        <button onclick="switchTab('orders')" id="tabBtnOrders" class="tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-school-400 flex items-center gap-2 transition whitespace-nowrap">
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+          <span>ការកុម្ម៉ង់អនឡាញ (Online Orders)</span>
+          <span id="tabOrderBadge" class="bg-amber-400 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">2</span>
+        </button>
+
+        <button onclick="switchTab('reports')" id="tabBtnReports" class="tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-school-400 flex items-center gap-2 transition whitespace-nowrap">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span>របាយការណ៍បិទបញ្ជី (EOD Close)</span>
+        </button>
+      </div>
+
+      <!-- Quick Action: Restock Button -->
+      <button onclick="openRestockModal()" class="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3.5 rounded-xl items-center gap-1.5 shadow transition">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>បញ្ចូលស្តុកបន្ថែម (+Restock)</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: POS COUNTER REGISTER -->
+    <div id="tabContentPos" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Product Grid for Fast Cashier Tapping -->
+      <div class="lg:col-span-8 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-xs font-bold text-slate-600 uppercase">ចុចលើមុខទំនិញដើម្បីដាក់ចូលវិក្កយបត្រ៖</div>
+          <div class="text-xs text-slate-500">មុខទំនិញសាលាផ្លូវការទាំង ៧</div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5" id="posProductGrid">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Live Counter Bill Register (Right Side) -->
+      <div class="lg:col-span-4">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-5 space-y-4 sticky top-24">
+          
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-school-100 text-school-700 flex items-center justify-center font-bold">
+                <i data-lucide="receipt" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">វិក្កយបត្របញ្ជរ (Current Bill)</h4>
+                <p class="text-[10px] text-slate-400" id="posBillId">BILL-2026</p>
+              </div>
+            </div>
+            <button onclick="clearPosBill()" class="text-slate-400 hover:text-rose-500 text-xs font-semibold p-1" title="លុបវិក្កយបត្រ">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Bill Items Scroll Area -->
+          <div class="space-y-2.5 max-h-64 overflow-y-auto custom-scrollbar" id="posBillItemsList">
+            <!-- Injected via JS -->
+          </div>
+
+          <!-- Total Calculation in KHR & USD -->
+          <div class="pt-3 border-t border-slate-100 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-500">
+              <span>ចំនួនទំនិញ៖</span>
+              <span id="posBillItemsCount">0 កំប្លេ</span>
+            </div>
+            <div class="flex justify-between items-baseline pt-1">
+              <span class="font-bold text-slate-800 text-sm">សរុបជាប្រាក់រៀល៖</span>
+              <span class="text-xl font-extrabold text-school-700" id="posBillTotalKhr">0 ៛</span>
+            </div>
+            <div class="flex justify-between text-slate-400 text-[11px]">
+              <span>ស្មើនឹងដុល្លារអាមេរិក៖</span>
+              <span id="posBillTotalUsd">~$0.00</span>
+            </div>
+          </div>
+
+          <!-- Fast Checkout Action Buttons -->
+          <div class="pt-2 grid grid-cols-2 gap-2">
+            <button onclick="processPosCheckout('cash')" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex flex-col items-center justify-center shadow transition">
+              <div class="flex items-center gap-1">
+                <i data-lucide="banknote" class="w-3.5 h-3.5"></i>
+                <span>លុយសុទ្ធ</span>
+              </div>
+              <span class="text-[10px] font-normal opacity-80">បង់សាច់ប្រាក់</span>
+            </button>
+
+            <button onclick="processPosCheckout('khqr')" class="bg-khqr-red hover:bg-red-700 active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex flex-col items-center justify-center shadow transition">
+              <div class="flex items-center gap-1">
+                <span class="font-black text-[11px]">KHQR</span>
+              </div>
+              <span class="text-[10px] font-normal opacity-90">ស្កេនបាគង</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: SIZE-LEVEL INVENTORY MATRIX -->
+    <div id="tabContentInventory" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h4 class="font-bold text-slate-900 text-base">តារាងស្តុកលម្អិតតាមទំហំនីមួយៗ (Size Inventory Matrix)</h4>
+            <p class="text-xs text-slate-500">តាមដានបរិមាណស្តុកគ្រប់ទំហំ អាវ ខោ សំពត់ ឈុតកីឡា និងខ្សែពាក់កាត</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openRestockModal()" class="bg-school-600 hover:bg-school-700 text-white text-xs font-bold py-2 px-3.5 rounded-xl flex items-center gap-1.5 shadow transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>បញ្ចូលស្តុកបន្ថែម</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-bold border-y border-slate-200">
+              <tr>
+                <th class="p-3">មុខទំនិញ (Item Name)</th>
+                <th class="p-3">ប្រភេទ</th>
+                <th class="p-3">តម្លៃលក់ (KHR / USD)</th>
+                <th class="p-3">ស្តុកតាមទំហំ (Sizes Breakdown)</th>
+                <th class="p-3 text-right">ស្តុករួម</th>
+                <th class="p-3 text-center">សកម្មភាព</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="inventoryTableBody">
+              <!-- Injected via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: ONLINE PARENT ORDERS QUEUE -->
+    <div id="tabContentOrders" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h4 class="font-bold text-slate-900 text-base">បញ្ជីការកុម្ម៉ង់អនឡាញពីអាណាព្យាបាល (Parent Online Orders)</h4>
+            <p class="text-xs text-slate-500">ទទួលទំនិញនៅបញ្ជរក្នុងសាលា ឬដឹកជញ្ជូនដល់ផ្ទះ</p>
+          </div>
+          <button onclick="refreshOrders()" class="text-school-700 hover:bg-school-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>ផ្ទុកឡើងវិញ</span>
+          </button>
+        </div>
+
+        <div class="space-y-3" id="ordersQueueList">
+          <!-- Injected via JavaScript -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 4: DAILY CLOSING & TELEGRAM EOD REPORT -->
+    <div id="tabContentReports" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Summary Cards -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h4 class="font-bold text-slate-900 text-base">សង្ខេបការលក់ប្រចាំថ្ងៃ (Daily Closing Audit)</h4>
+            <span class="text-xs font-mono text-slate-500" id="reportDateDisplay">2026-09-20</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-slate-500">ចំណូលលក់ជាប្រាក់រៀល៖</span>
+              <div class="text-lg font-black text-school-800 mt-1" id="eodSalesKhr">248,000 ៛</div>
+              <div class="text-[11px] text-slate-400" id="eodSalesUsd">~$60.48 USD</div>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-slate-500">បែងចែកតាមវិធីទូទាត់៖</span>
+              <div class="text-xs font-bold text-emerald-700 mt-1">លុយសុទ្ធ៖ <span id="eodCashKhr">138,000 ៛</span></div>
+              <div class="text-xs font-bold text-rose-700 mt-0.5">KHQR Bakong៖ <span id="eodKhqrKhr">110,000 ៛</span></div>
+            </div>
+          </div>
+
+          <div>
+            <h5 class="font-bold text-xs text-slate-700 mb-2">មុខទំនិញដែលលក់ដាច់ជាងគេថ្ងៃនេះ៖</h5>
+            <div class="space-y-2 text-xs" id="topSellingList">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+
+          <div class="p-4 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2 text-xs">
+            <div class="font-bold text-amber-900 flex items-center gap-1.5">
+              <i data-lucide="bell" class="w-4 h-4 text-amber-600"></i>
+              <span>សេចក្តីជូនដំណឹងស្តុកជិតអស់</span>
+            </div>
+            <p class="text-amber-800 text-[11px]" id="eodLowStockSummary">
+              មាន ៤ ទំហំដែលនៅសល់ក្រោម ៥ កំប្លេ សូមបញ្ជាទិញបន្ថែមពីអ្នកផ្គត់ផ្គង់។
+            </p>
+          </div>
+        </div>
+
+        <!-- Telegram EOD Dispatcher (Right Side) -->
+        <div class="lg:col-span-5 bg-gradient-to-br from-school-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#229ED9] text-white flex items-center justify-center shadow-lg shadow-[#229ED9]/30">
+              <i data-lucide="send" class="w-6 h-6"></i>
+            </div>
+            <h4 class="text-lg font-bold">ផ្ញើរបាយការណ៍បិទបញ្ជីទៅ Telegram</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              ប្រព័ន្ធនឹងចងក្រងទិន្នន័យលក់ពេញមួយថ្ងៃ ចំនួនវិក្កយបត្រ ប្រាក់រៀល/ដុល្លារ និងបញ្ជីស្តុកជិតអស់ 
+              ផ្ញើចូលគ្រុប Telegram របស់ម្ចាស់ហាង និងគណៈគ្រប់គ្រងសាលាដោយស្វ័យប្រវត្តិ។
+            </p>
+
+            <div class="bg-white/10 rounded-xl p-3 text-xs space-y-1 text-slate-300 font-mono">
+              <div>Bot: @CheaSimUniformBot</div>
+              <div>Chat ID: -1004328071470</div>
+              <div>Status: Verified Active</div>
+            </div>
+          </div>
+
+          <div>
+            <button onclick="dispatchTelegramEodReport()" id="btnDispatchTelegramEod" class="w-full bg-[#229ED9] hover:bg-[#1d8fc5] active:scale-95 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span id="btnDispatchTelegramEodText">ផ្ញើរបាយការណ៍បិទបញ្ជីឥឡូវនេះ (1-Click)</span>
+            </button>
+            <p class="text-[10px] text-center text-slate-400 mt-2">ផ្ញើចេញដោយផ្ទាល់ទៅ Telegram របស់ម្ចាស់ហាង</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RESTOCK MODAL -->
+  <div id="restockModal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+    <div class="min-h-screen px-4 text-center flex items-center justify-center">
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeRestockModal()"></div>
+
+      <div class="inline-block w-full max-w-md bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all my-8 relative z-10 border border-slate-100 p-6">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <i data-lucide="package-plus" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm">បញ្ចូលស្តុកទំនិញបន្ថែម (Restock)</h4>
+              <p class="text-[11px] text-slate-500">បន្ថែមចំនួនស្តុកពេលរោងចក្រដឹកមកដល់</p>
+            </div>
+          </div>
+          <button onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-700">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form onsubmit="handleRestockSubmit(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">ជ្រើសរើសមុខទំនិញ</label>
+            <select id="restockProductSelect" onchange="updateRestockSizeOptions()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-school-500 bg-white">
+              <!-- Injected via JS -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">ជ្រើសរើសទំហំ (Size)</label>
+            <select id="restockSizeSelect" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-school-500 bg-white">
+              <!-- Injected via JS -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">ចំនួនបញ្ចូលបន្ថែម (Quantity)</label>
+            <div class="flex gap-2">
+              <input type="number" id="restockQty" value="20" min="1" max="500" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-school-500 text-center font-bold" required />
+              <button type="button" onclick="setRestockQty(10)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold">+10</button>
+              <button type="button" onclick="setRestockQty(20)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold">+20</button>
+              <button type="button" onclick="setRestockQty(50)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold">+50</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">សម្គាល់ពីអ្នកផ្គត់ផ្គង់ (Note)</label>
+            <input type="text" id="restockNote" placeholder="ឧ. រោងចក្រកាត់ដេរកម្ពុជា - កេសលេខ 4" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-school-500" />
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm shadow transition mt-2">
+            បញ្ជាក់ការបញ្ចូលស្តុក
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIPT SUCCESS MODAL FOR POS CASHIER -->
+  <div id="posReceiptModal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+    <div class="min-h-screen px-4 text-center flex items-center justify-center">
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closePosReceiptModal()"></div>
+
+      <div class="inline-block w-full max-w-sm bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all my-8 relative z-10 border border-slate-100 p-6 text-center space-y-4">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center">
+          <i data-lucide="check" class="w-8 h-8"></i>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 text-base">ការទូទាត់ជោគជ័យ!</h4>
+          <p class="text-xs text-slate-500" id="receiptBillCode">BILL-8492</p>
+        </div>
+
+        <div class="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4 text-xs space-y-2 text-left">
+          <div class="flex justify-between text-slate-600">
+            <span>វិធីទូទាត់៖</span>
+            <span class="font-bold text-slate-900" id="receiptPaymentMethod">សាច់ប្រាក់សុទ្ធ</span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span>ទឹកប្រាក់សរុប៖</span>
+            <span class="font-extrabold text-school-800 text-sm" id="receiptTotalKhr">38,000 ៛</span>
+          </div>
+          <div class="text-[10px] text-slate-400 text-center pt-2 border-t border-slate-200">
+            ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម (On-Campus Booth)
+          </div>
+        </div>
+
+        <button onclick="closePosReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition">
+          រួចរាល់ (បន្តលក់បន្ទាប់)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT POS & INVENTORY CONTROLLER -->
+  <script>
+    // Initial Stock Data Matrix for the 7 School Products
+    const INITIAL_CATALOG = [
+      {
+        id: 'cs-boy-shirt',
+        name: 'Boy Student Shirt',
+        nameKh: 'អាវសិស្សប្រុស (សាច់ក្រណាត់ស)',
+        category: 'ឯកសណ្ឋានប្រុស',
+        priceKhr: 18000,
+        priceUsd: 4.39,
+        sizes: [
+          { size: '24', stock: 25 },
+          { size: '26', stock: 32 },
+          { size: '28', stock: 18 },
+          { size: '30', stock: 15 },
+          { size: '32', stock: 9 },
+          { size: '34', stock: 4 }
+        ]
+      },
+      {
+        id: 'cs-boy-pants',
+        name: 'Boy Student Pants',
+        nameKh: 'ខោខ្លីសិស្សប្រុស (ពណ៌ខៀវចាស់)',
+        category: 'ឯកសណ្ឋានប្រុស',
+        priceKhr: 20000,
+        priceUsd: 4.88,
+        sizes: [
+          { size: '22', stock: 14 },
+          { size: '24', stock: 20 },
+          { size: '26', stock: 28 },
+          { size: '28', stock: 12 },
+          { size: '30', stock: 8 },
+          { size: '32', stock: 3 }
+        ]
+      },
+      {
+        id: 'cs-boy-tie',
+        name: 'Boy Student Tie',
+        nameKh: 'ក្រវ៉ាត់កសិស្សប្រុស (មានកៅស៊ូយឺត)',
+        category: 'ឯកសណ្ឋានប្រុស',
+        priceKhr: 5000,
+        priceUsd: 1.22,
+        sizes: [
+          { size: 'Free Size', stock: 65 }
+        ]
+      },
+      {
+        id: 'cs-girl-shirt',
+        name: 'Girl Student Shirt',
+        nameKh: 'អាវសិស្សស្រី (សាច់ក្រណាត់ស កបត់)',
+        category: 'ឯកសណ្ឋានស្រី',
+        priceKhr: 18000,
+        priceUsd: 4.39,
+        sizes: [
+          { size: '24', stock: 20 },
+          { size: '26', stock: 26 },
+          { size: '28', stock: 22 },
+          { size: '30', stock: 14 },
+          { size: '32', stock: 7 },
+          { size: '34', stock: 2 }
+        ]
+      },
+      {
+        id: 'cs-girl-skirt',
+        name: 'Girl Student Skirt',
+        nameKh: 'សំពត់សិស្សស្រី (ពណ៌ខៀវចាស់ មានផ្នត់)',
+        category: 'ឯកសណ្ឋានស្រី',
+        priceKhr: 20000,
+        priceUsd: 4.88,
+        sizes: [
+          { size: '22', stock: 16 },
+          { size: '24', stock: 24 },
+          { size: '26', stock: 30 },
+          { size: '28', stock: 15 },
+          { size: '30', stock: 10 },
+          { size: '32', stock: 4 }
+        ]
+      },
+      {
+        id: 'cs-sport-uniform',
+        name: 'Unisex Sport Uniform Set',
+        nameKh: 'ឈុតកីឡាសាលា (អាវយឺត + ខោកីឡា)',
+        category: 'ឈុតកីឡា',
+        priceKhr: 26000,
+        priceUsd: 6.34,
+        sizes: [
+          { size: 'S', stock: 22 },
+          { size: 'M', stock: 35 },
+          { size: 'L', stock: 19 },
+          { size: 'XL', stock: 8 }
+        ]
+      },
+      {
+        id: 'cs-id-holder',
+        name: 'School ID Card Holder & Lanyard',
+        nameKh: 'ប្រអប់កាតសិស្ស និងខ្សែពាក់ក',
+        category: 'សម្ភារៈសិស្ស',
+        priceKhr: 4000,
+        priceUsd: 0.98,
+        sizes: [
+          { size: 'ពណ៌ខៀវ (Blue)', stock: 120 },
+          { size: 'ពណ៌ក្រហម (Red)', stock: 45 }
+        ]
+      }
+    ];
+
+    // State Variables
+    let catalog = JSON.parse(localStorage.getItem('cs_catalog') || JSON.stringify(INITIAL_CATALOG));
+    let posBill = [];
+    let todaySalesKhr = 248000;
+    let todayTransactions = 14;
+    let walkInTransactions = 11;
+    let onlineTransactions = 3;
+    let todayCashKhr = 138000;
+    let todayKhqrKhr = 110000;
+
+    // Seed mock online orders if empty
+    let onlineOrders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+    if (onlineOrders.length === 0) {
+      onlineOrders = [
+        {
+          orderId: 'CS-8419',
+          customerName: 'អ្នកស្រី គឹម សៀក',
+          phone: '012 889 922',
+          studentName: 'គឹម វុឌ្ឍី',
+          studentGrade: 'ថ្នាក់ទី៣',
+          pickupMethod: 'On-Campus Booth Pickup (ទទួលនៅបញ្ជរក្នុងសាលា)',
+          paymentMethod: 'KHQR Bakong',
+          items: [
+            { nameKh: 'អាវសិស្សប្រុស (សាច់ក្រណាត់ស)', size: '28', qty: 2, price: 18000 },
+            { nameKh: 'ខោខ្លីសិស្សប្រុស (ពណ៌ខៀវចាស់)', size: '26', qty: 2, price: 20000 },
+            { nameKh: 'ក្រវ៉ាត់កសិស្សប្រុស (មានកៅស៊ូយឺត)', size: 'Free Size', qty: 1, price: 5000 }
+          ],
+          totalKhr: 81000,
+          totalUsd: 19.75,
+          status: 'ready',
+          createdAt: new Date().toISOString()
+        },
+        {
+          orderId: 'CS-7201',
+          customerName: 'លោក ហេង សុផល',
+          phone: '098 334 551',
+          studentName: 'ហេង រតនា',
+          studentGrade: 'ថ្នាក់ទី៥',
+          pickupMethod: 'On-Campus Booth Pickup (ទទួលនៅបញ្ជរក្នុងសាលា)',
+          paymentMethod: 'Cash on Pickup',
+          items: [
+            { nameKh: 'ឈុតកីឡាសាលា (អាវយឺត + ខោកីឡា)', size: 'L', qty: 1, price: 26000 },
+            { nameKh: 'ប្រអប់កាតសិស្ស និងខ្សែពាក់ក', size: 'ពណ៌ខៀវ (Blue)', qty: 1, price: 4000 }
+          ],
+          totalKhr: 30000,
+          totalUsd: 7.32,
+          status: 'ready',
+          createdAt: new Date().toISOString()
+        }
+      ];
+      localStorage.setItem('cs_orders', JSON.stringify(onlineOrders));
+    }
+
+    // Init Page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if session unlocked
+      if (sessionStorage.getItem('cs_pos_auth') === 'true') {
+        document.getElementById('loginModal').classList.add('hidden');
+      }
+      renderPosProducts();
+      renderInventoryTable();
+      renderOnlineOrders();
+      renderEodReport();
+      updateTopStats();
+      lucide.createIcons();
+    });
+
+    // Auth
+    function handleStaffLogin(e) {
+      e.preventDefault();
+      const code = document.getElementById('staffPasscode').value.trim();
+      if (code === 'cheasim2026' || code === '1234') {
+        sessionStorage.setItem('cs_pos_auth', 'true');
+        document.getElementById('loginModal').classList.add('hidden');
+      } else {
+        alert('លេខកូដមិនត្រឹមត្រូវទេ! សូមសាកល្បង cheasim2026');
+      }
+    }
+
+    function bypassDemoLogin() {
+      sessionStorage.setItem('cs_pos_auth', 'true');
+      document.getElementById('loginModal').classList.add('hidden');
+    }
+
+    function lockSystem() {
+      sessionStorage.removeItem('cs_pos_auth');
+      document.getElementById('loginModal').classList.remove('hidden');
+    }
+
+    // Tabs
+    function switchTab(tab) {
+      const tabs = ['pos', 'inventory', 'orders', 'reports'];
+      tabs.forEach(t => {
+        const content = document.getElementById(`tabContent${capitalize(t)}`);
+        const btn = document.getElementById(`tabBtn${capitalize(t)}`);
+        if (t === tab) {
+          content.classList.remove('hidden');
+          btn.className = 'tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-school-600 text-white shadow-sm flex items-center gap-2 transition whitespace-nowrap';
+        } else {
+          content.classList.add('hidden');
+          btn.className = 'tab-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-school-400 flex items-center gap-2 transition whitespace-nowrap';
+        }
+      });
+      lucide.createIcons();
+    }
+
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    // TAB 1: POS Fast Register Logic
+    function renderPosProducts() {
+      const grid = document.getElementById('posProductGrid');
+      grid.innerHTML = catalog.map(p => `
+        <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-col justify-between hover:border-school-400 hover:shadow-md transition">
+          <div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+              <span>${p.category}</span>
+              <span class="font-bold text-school-700">${p.priceKhr.toLocaleString()} ៛</span>
+            </div>
+            <h5 class="font-bold text-slate-900 text-xs leading-snug">${p.nameKh}</h5>
+          </div>
+
+          <!-- Quick Size Buttons for POS Tap -->
+          <div class="mt-2.5 pt-2 border-t border-slate-100">
+            <div class="text-[10px] text-slate-500 mb-1">ជ្រើសទំហំដាក់ក្នុងវិក្កយបត្រ៖</div>
+            <div class="flex flex-wrap gap-1">
+              ${p.sizes.map(s => `
+                <button type="button" onclick="addToPosBill('${p.id}', '${s.size}')" class="px-2 py-1 bg-slate-100 hover:bg-school-600 hover:text-white rounded text-[11px] font-bold text-slate-700 transition active:scale-95 ${s.stock <= 5 ? 'border border-rose-300' : ''}">
+                  ${s.size} <span class="text-[9px] opacity-75">(${s.stock})</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToPosBill(productId, size) {
+      const prod = catalog.find(p => p.id === productId);
+      if (!prod) return;
+
+      const sizeObj = prod.sizes.find(s => s.size === size);
+      if (!sizeObj || sizeObj.stock <= 0) {
+        alert('ទំហំនេះអស់ពីស្តុកហើយ! សូមពិនិត្យមើលស្តុកឡើងវិញ។');
+        return;
+      }
+
+      const billItemId = `${prod.id}__${size}`;
+      const existing = posBill.find(item => item.billItemId === billItemId);
+
+      if (existing) {
+        if (existing.qty >= sizeObj.stock) {
+          alert(`ស្តុកនៅសល់ត្រឹម ${sizeObj.stock} កំប្លេប៉ុណ្ណោះ!`);
+          return;
+        }
+        existing.qty += 1;
+      } else {
+        posBill.push({
+          billItemId,
+          id: prod.id,
+          nameKh: prod.nameKh,
+          size: size,
+          priceKhr: prod.priceKhr,
+          priceUsd: prod.priceUsd,
+          qty: 1
+        });
+      }
+
+      updatePosBillUI();
+    }
+
+    function changePosBillQty(billItemId, delta) {
+      const item = posBill.find(i => i.billItemId === billItemId);
+      if (!item) return;
+
+      item.qty += delta;
+      if (item.qty <= 0) {
+        posBill = posBill.filter(i => i.billItemId !== billItemId);
+      }
+      updatePosBillUI();
+    }
+
+    function clearPosBill() {
+      posBill = [];
+      updatePosBillUI();
+    }
+
+    function updatePosBillUI() {
+      const list = document.getElementById('posBillItemsList');
+      const countSpan = document.getElementById('posBillItemsCount');
+      const totalKhrSpan = document.getElementById('posBillTotalKhr');
+      const totalUsdSpan = document.getElementById('posBillTotalUsd');
+
+      const totalQty = posBill.reduce((sum, it) => sum + it.qty, 0);
+      const totalKhr = posBill.reduce((sum, it) => sum + (it.priceKhr * it.qty), 0);
+      const totalUsd = totalKhr / 4100;
+
+      countSpan.innerText = `${totalQty} កំប្លេ`;
+      totalKhrSpan.innerText = `${totalKhr.toLocaleString()} ៛`;
+      totalUsdSpan.innerText = `~$${totalUsd.toFixed(2)}`;
+
+      if (posBill.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-8 text-slate-400">
+            <i data-lucide="shopping-cart" class="w-8 h-8 mx-auto mb-1 opacity-40"></i>
+            <span class="text-xs">មិនទាន់មានទំនិញក្នុងវិក្កយបត្រ</span>
+          </div>
+        `;
+      } else {
+        list.innerHTML = posBill.map(it => `
+          <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+            <div class="min-w-0 flex-1 pr-2">
+              <div class="font-bold text-slate-800 truncate">${it.nameKh}</div>
+              <div class="text-[10px] text-slate-500">ទំហំ៖ <span class="font-bold text-school-700">${it.size}</span> | ${(it.priceKhr * it.qty).toLocaleString()} ៛</div>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="changePosBillQty('${it.billItemId}', -1)" class="w-5 h-5 rounded bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-100">-</button>
+              <span class="w-5 text-center font-bold">${it.qty}</span>
+              <button onclick="changePosBillQty('${it.billItemId}', 1)" class="w-5 h-5 rounded bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-100">+</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      lucide.createIcons();
+    }
+
+    function processPosCheckout(method) {
+      if (posBill.length === 0) {
+        alert('សូមជ្រើសរើសទំនិញចូលវិក្កយបត្រជាមុនសិន!');
+        return;
+      }
+
+      const totalKhr = posBill.reduce((sum, it) => sum + (it.priceKhr * it.qty), 0);
+      const totalUsd = totalKhr / 4100;
+      const billCode = `BILL-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      // Deduct inventory
+      posBill.forEach(billItem => {
+        const prod = catalog.find(p => p.id === billItem.id);
+        if (prod) {
+          const sObj = prod.sizes.find(s => s.size === billItem.size);
+          if (sObj) {
+            sObj.stock = Math.max(0, sObj.stock - billItem.qty);
+          }
+        }
+      });
+      saveCatalog();
+
+      // Update financial metrics
+      todaySalesKhr += totalKhr;
+      todayTransactions += 1;
+      walkInTransactions += 1;
+      if (method === 'cash') {
+        todayCashKhr += totalKhr;
+      } else {
+        todayKhqrKhr += totalKhr;
+      }
+
+      // Show receipt modal
+      document.getElementById('receiptBillCode').innerText = billCode;
+      document.getElementById('receiptPaymentMethod').innerText = method === 'cash' ? 'សាច់ប្រាក់សុទ្ធ (Cash)' : 'KHQR Bakong Scan';
+      document.getElementById('receiptTotalKhr').innerText = `${totalKhr.toLocaleString()} ៛ (~$${totalUsd.toFixed(2)})`;
+      document.getElementById('posReceiptModal').classList.remove('hidden');
+
+      // Clear bill & re-render
+      clearPosBill();
+      renderPosProducts();
+      renderInventoryTable();
+      renderEodReport();
+      updateTopStats();
+    }
+
+    function closePosReceiptModal() {
+      document.getElementById('posReceiptModal').classList.add('hidden');
+    }
+
+    // TAB 2: Inventory Table Logic
+    function renderInventoryTable() {
+      const tbody = document.getElementById('inventoryTableBody');
+      tbody.innerHTML = catalog.map(p => {
+        const totalStock = p.sizes.reduce((sum, s) => sum + s.stock, 0);
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3">
+              <div class="font-bold text-slate-900">${p.nameKh}</div>
+              <div class="text-[11px] text-slate-400 font-sans">${p.name}</div>
+            </td>
+            <td class="p-3 text-slate-600">${p.category}</td>
+            <td class="p-3">
+              <div class="font-bold text-slate-900">${p.priceKhr.toLocaleString()} ៛</div>
+              <div class="text-[10px] text-slate-400">~$${p.priceUsd.toFixed(2)}</div>
+            </td>
+            <td class="p-3">
+              <div class="flex flex-wrap gap-1.5">
+                ${p.sizes.map(s => `
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ${s.stock <= 5 ? 'bg-rose-100 text-rose-800 font-bold' : 'bg-slate-100 text-slate-700'}">
+                    <span>${s.size}:</span>
+                    <span class="font-bold">${s.stock}</span>
+                    ${s.stock <= 5 ? '<i data-lucide="alert-circle" class="w-3 h-3 text-rose-600"></i>' : ''}
+                  </span>
+                `).join('')}
+              </div>
+            </td>
+            <td class="p-3 text-right">
+              <span class="font-extrabold text-sm text-slate-900">${totalStock}</span>
+            </td>
+            <td class="p-3 text-center">
+              <button onclick="openRestockForProduct('${p.id}')" class="px-2.5 py-1 bg-school-50 hover:bg-school-100 text-school-700 rounded-lg text-xs font-bold transition">
+                + បន្ថែម
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    // TAB 3: Online Orders Queue
+    function renderOnlineOrders() {
+      const container = document.getElementById('ordersQueueList');
+      const badge = document.getElementById('tabOrderBadge');
+      const pendingCount = onlineOrders.filter(o => o.status === 'ready' || o.status === 'pending_pickup').length;
+      badge.innerText = pendingCount;
+
+      if (onlineOrders.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-xs">
+            មិនទាន់មានការកុម្ម៉ង់អនឡាញថ្មីនៅឡើយទេ។
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = onlineOrders.map(order => `
+        <div class="p-4 rounded-xl border ${order.status === 'completed' ? 'border-slate-200 bg-slate-50 opacity-75' : 'border-amber-200 bg-amber-50/40'} flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-900 text-sm font-mono">${order.orderId}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${order.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">
+                ${order.status === 'completed' ? 'បានប្រគល់ជូនរួចរាល់' : 'រង់ចាំទទួលនៅបញ្ជរ'}
+              </span>
+              <span class="text-slate-400 text-[10px]">${order.paymentMethod}</span>
+            </div>
+            
+            <div class="text-slate-700">
+              អាណាព្យាបាល៖ <b>${order.customerName}</b> (ទូរស័ព្ទ៖ <code>${order.phone}</code>)
+            </div>
+            <div class="text-slate-500 text-[11px]">
+              សិស្ស៖ <b>${order.studentName || 'ទូទៅ'}</b> (${order.studentGrade || ''}) | ទីតាំង៖ <b>${order.pickupMethod}</b>
+            </div>
+
+            <div class="pt-1.5 flex flex-wrap gap-1 text-[11px]">
+              ${order.items.map(it => `
+                <span class="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">
+                  ${it.nameKh} [${it.size}] x ${it.qty}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+            <div class="text-right">
+              <div class="font-extrabold text-school-800 text-sm">${order.totalKhr.toLocaleString()} ៛</div>
+              <div class="text-[10px] text-slate-400">~$${order.totalUsd.toFixed(2)}</div>
+            </div>
+
+            ${order.status !== 'completed' ? `
+              <button onclick="markOrderCompleted('${order.orderId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow transition">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <span>បានប្រគល់ជូន</span>
+              </button>
+            ` : `
+              <span class="text-emerald-700 text-xs font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> រួចរាល់
+              </span>
+            `}
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function markOrderCompleted(orderId) {
+      const order = onlineOrders.find(o => o.orderId === orderId);
+      if (order) {
+        order.status = 'completed';
+        localStorage.setItem('cs_orders', JSON.stringify(onlineOrders));
+        renderOnlineOrders();
+        updateTopStats();
+      }
+    }
+
+    function refreshOrders() {
+      onlineOrders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+      renderOnlineOrders();
+      updateTopStats();
+    }
+
+    // TAB 4: Daily EOD Report & Telegram Dispatch
+    function renderEodReport() {
+      document.getElementById('reportDateDisplay').innerText = new Date().toLocaleDateString('km-KH');
+      document.getElementById('eodSalesKhr').innerText = `${todaySalesKhr.toLocaleString()} ៛`;
+      document.getElementById('eodSalesUsd').innerText = `~$${(todaySalesKhr / 4100).toFixed(2)} USD`;
+      document.getElementById('eodCashKhr').innerText = `${todayCashKhr.toLocaleString()} ៛`;
+      document.getElementById('eodKhqrKhr').innerText = `${todayKhqrKhr.toLocaleString()} ៛`;
+
+      const topList = document.getElementById('topSellingList');
+      topList.innerHTML = `
+        <div class="flex justify-between p-2 bg-slate-50 rounded-lg">
+          <span>១. អាវសិស្សប្រុស (លេខ 26 & 28)</span>
+          <span class="font-bold">6 កំប្លេ (108,000 ៛)</span>
+        </div>
+        <div class="flex justify-between p-2 bg-slate-50 rounded-lg">
+          <span>២. ខោខ្លីសិស្សប្រុស (លេខ 26)</span>
+          <span class="font-bold">4 កំប្លេ (80,000 ៛)</span>
+        </div>
+        <div class="flex justify-between p-2 bg-slate-50 rounded-lg">
+          <span>៣. ឈុតកីឡាសាលា (ទំហំ M & L)</span>
+          <span class="font-bold">2 កំប្លេ (52,000 ៛)</span>
+        </div>
+      `;
+    }
+
+    async function dispatchTelegramEodReport() {
+      const btn = document.getElementById('btnDispatchTelegramEod');
+      const btnText = document.getElementById('btnDispatchTelegramEodText');
+      btn.disabled = true;
+      btnText.innerText = 'កំពុងផ្ញើរបាយការណ៍ទៅ Telegram...';
+
+      // Collect low-stock items
+      const lowStockAlerts = [];
+      catalog.forEach(p => {
+        p.sizes.forEach(s => {
+          if (s.stock <= 5) {
+            lowStockAlerts.push({ name: p.nameKh, size: s.size, stock: s.stock });
+          }
+        });
+      });
+
+      const payload = {
+        date: new Date().toLocaleDateString('km-KH'),
+        totalSalesKhr: todaySalesKhr,
+        totalSalesUsd: todaySalesKhr / 4100,
+        totalOrders: todayTransactions,
+        walkInCount: walkInTransactions,
+        onlineCount: onlineTransactions,
+        cashTotalKhr: todayCashKhr,
+        khqrTotalKhr: todayKhqrKhr,
+        topItems: [
+          { name: 'អាវសិស្សប្រុស (លេខ 26 & 28)', qty: 6, revenue: 108000 },
+          { name: 'ខោខ្លីសិស្សប្រុស (លេខ 26)', qty: 4, revenue: 80000 },
+          { name: 'ឈុតកីឡាសាលា (M & L)', qty: 2, revenue: 52000 }
+        ],
+        lowStockAlerts
+      };
+
+      try {
+        const response = await fetch('/api/telegram-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          alert('✅ របាយការណ៍បិទបញ្ជីប្រចាំថ្ងៃត្រូវបានផ្ញើចូល Telegram របស់ម្ចាស់ហាងជោគជ័យ!');
+        } else {
+          alert('បានចងក្រងទិន្នន័យរួចរាល់ (Mock dispatched to Telegram).');
+        }
+      } catch (err) {
+        alert('បានចងក្រងទិន្នន័យរួចរាល់ (Offline simulated dispatch).');
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = 'ផ្ញើរបាយការណ៍បិទបញ្ជីឥឡូវនេះ (1-Click)';
+      }
+    }
+
+    // Top Metric Stats
+    function updateTopStats() {
+      document.getElementById('statTotalSalesKhr').innerText = `${todaySalesKhr.toLocaleString()} ៛`;
+      document.getElementById('statTotalSalesUsd').innerText = `~$${(todaySalesKhr / 4100).toFixed(2)}`;
+      document.getElementById('statTransactionsCount').innerText = `${todayTransactions} ប្រតិបត្តិការ`;
+      
+      let lowCount = 0;
+      catalog.forEach(p => {
+        p.sizes.forEach(s => {
+          if (s.stock <= 5) lowCount++;
+        });
+      });
+      document.getElementById('statLowStockCount').innerText = `${lowCount} ទំហំ`;
+
+      const pendingPickups = onlineOrders.filter(o => o.status === 'ready' || o.status === 'pending_pickup').length;
+      document.getElementById('statPendingPickupsCount').innerText = `${pendingPickups} កុម្ម៉ង់`;
+    }
+
+    // Restock Modal Logic
+    function openRestockModal() {
+      populateRestockSelects();
+      document.getElementById('restockModal').classList.remove('hidden');
+    }
+
+    function openRestockForProduct(prodId) {
+      populateRestockSelects();
+      document.getElementById('restockProductSelect').value = prodId;
+      updateRestockSizeOptions();
+      document.getElementById('restockModal').classList.remove('hidden');
+    }
+
+    function closeRestockModal() {
+      document.getElementById('restockModal').classList.add('hidden');
+    }
+
+    function populateRestockSelects() {
+      const prodSelect = document.getElementById('restockProductSelect');
+      prodSelect.innerHTML = catalog.map(p => `
+        <option value="${p.id}">${p.nameKh} (${p.category})</option>
+      `).join('');
+      updateRestockSizeOptions();
+    }
+
+    function updateRestockSizeOptions() {
+      const prodId = document.getElementById('restockProductSelect').value;
+      const prod = catalog.find(p => p.id === prodId);
+      const sizeSelect = document.getElementById('restockSizeSelect');
+      if (prod) {
+        sizeSelect.innerHTML = prod.sizes.map(s => `
+          <option value="${s.size}">ទំហំ ${s.size} (បច្ចុប្បន្ននៅសល់ ${s.stock})</option>
+        `).join('');
+      }
+    }
+
+    function setRestockQty(val) {
+      document.getElementById('restockQty').value = val;
+    }
+
+    function handleRestockSubmit(e) {
+      e.preventDefault();
+      const prodId = document.getElementById('restockProductSelect').value;
+      const sizeVal = document.getElementById('restockSizeSelect').value;
+      const addQty = parseInt(document.getElementById('restockQty').value) || 0;
+
+      const prod = catalog.find(p => p.id === prodId);
+      if (prod) {
+        const sObj = prod.sizes.find(s => s.size === sizeVal);
+        if (sObj) {
+          sObj.stock += addQty;
+          saveCatalog();
+          renderInventoryTable();
+          renderPosProducts();
+          updateTopStats();
+          closeRestockModal();
+          alert(`✅ បានបញ្ចូល ${prod.nameKh} [ទំហំ ${sizeVal}] ចំនួន +${addQty} កំប្លេ ជោគជ័យ!`);
+        }
+      }
+    }
+
+    function saveCatalog() {
+      localStorage.setItem('cs_catalog', JSON.stringify(catalog));
+    }
+  </script>
+</body>
+</html>
