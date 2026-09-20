@@ -42,11 +42,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   onOpenSizeGuide,
 }) => {
   const categories: { id: ProductCategory; label: string; count: number }[] = [
-    { id: 'all', label: 'ទាំងអស់', count: 7 },
-    { id: 'boy', label: 'ឯកសណ្ឋានប្រុស', count: 3 },
-    { id: 'girl', label: 'ឯកសណ្ឋានស្រី', count: 2 },
-    { id: 'sport', label: 'ឈុតកីឡាសាលា', count: 1 },
-    { id: 'supplies', label: 'សម្ភារៈសិស្ស', count: 1 },
+    { id: 'all', label: 'ទាំងអស់', count: products.length },
+    { id: 'boy', label: 'ឯកសណ្ឋានប្រុស', count: products.filter(p => p.category === 'boy').length },
+    { id: 'girl', label: 'ឯកសណ្ឋានស្រី', count: products.filter(p => p.category === 'girl').length },
+    { id: 'sport', label: 'ឈុតកីឡាសាលា', count: products.filter(p => p.category === 'sport').length },
+    { id: 'shoes', label: 'ស្បែកជើងប៉ាត់តា', count: products.filter(p => p.category === 'shoes').length },
+    { id: 'supplies', label: 'សម្ភារៈសិស្ស', count: products.filter(p => p.category === 'supplies').length },
   ];
 
   const filteredProducts =
@@ -60,7 +61,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
-            បញ្ជីឯកសណ្ឋាន និងសម្ភារៈផ្លូវការ (៧ មុខគត់)
+            បញ្ជីឯកសណ្ឋាន និងសម្ភារៈផ្លូវការ ({products.length} មុខ)
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             ជ្រើសរើសទំហំ ឬពណ៌តាមកម្រិតថ្នាក់ដើម្បីពិនិត្យស្តុក ឬកុម្ម៉ង់ទិញ

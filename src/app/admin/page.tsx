@@ -17,6 +17,24 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS);
 
+  // Helper to merge saved products with BASE_PRODUCTS
+  const mergeWithBaseProducts = (saved: Product[]): Product[] => {
+    const savedMap = new Map(saved.map((p) => [p.id, p]));
+    return BASE_PRODUCTS.map((base) => {
+      const s = savedMap.get(base.id);
+      if (!s) return base;
+      return {
+        ...base,
+        priceKhr: typeof s.priceKhr === 'number' ? s.priceKhr : base.priceKhr,
+        priceUsd: typeof s.priceUsd === 'number' ? s.priceUsd : base.priceUsd,
+        costKhr: typeof s.costKhr === 'number' ? s.costKhr : (base.costKhr ?? 0),
+        costUsd: typeof s.costUsd === 'number' ? s.costUsd : (base.costUsd ?? 0),
+        sizes: s.sizes || base.sizes,
+        variants: s.variants || base.variants,
+      };
+    });
+  };
+
   // Load state on mount
   useEffect(() => {
     try {
@@ -27,13 +45,18 @@ export default function AdminPage() {
       if (savedSettings) setSettings(JSON.parse(savedSettings));
 
       const savedProducts = localStorage.getItem('cs_products');
-      if (savedProducts) setProducts(JSON.parse(savedProducts));
+      if (savedProducts) {
+        const parsed = JSON.parse(savedProducts);
+        if (Array.isArray(parsed)) {
+          setProducts(mergeWithBaseProducts(parsed));
+        }
+      }
     } catch {
       // ignore
     }
   }, []);
 
-  // Save updated products stock
+  // Save updated products
   const saveProducts = (updated: Product[]) => {
     setProducts(updated);
     try {
@@ -41,6 +64,30 @@ export default function AdminPage() {
     } catch {
       // ignore
     }
+  };
+
+  // Price & Cost update handler
+  const handleUpdatePrice = (
+    productId: string,
+    newSellingPriceKhr: number,
+    newBoughtPriceKhr?: number
+  ) => {
+    const updated = products.map((p) => {
+      if (p.id !== productId) return p;
+      const priceKhr = Math.max(0, newSellingPriceKhr);
+      const priceUsd = Math.round((priceKhr / 4100) * 100) / 100;
+      const costKhr = newBoughtPriceKhr !== undefined ? Math.max(0, newBoughtPriceKhr) : (p.costKhr ?? 0);
+      const costUsd = Math.round((costKhr / 4100) * 100) / 100;
+      return {
+        ...p,
+        priceKhr,
+        priceUsd,
+        costKhr,
+        costUsd,
+      };
+    });
+
+    saveProducts(updated);
   };
 
   // Stock update handler
@@ -295,6 +342,7 @@ export default function AdminPage() {
           <InventoryManager
             products={products}
             onUpdateStock={handleUpdateStock}
+            onUpdatePrice={handleUpdatePrice}
           />
         )}
 

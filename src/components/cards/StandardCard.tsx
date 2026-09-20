@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Plus, Ruler, MessageCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Product } from '@/types';
-import { SIZE_WEIGHT_GUIDE } from '@/lib/catalog';
+import { getSizeGuide } from '@/lib/catalog';
 
 interface StandardCardProps {
   product: Product;
@@ -23,7 +23,7 @@ export const StandardCard: React.FC<StandardCardProps> = ({
   const stock = currentSizeObj.stock;
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 10;
-  const currentWeightInfo = SIZE_WEIGHT_GUIDE[selectedSize];
+  const currentWeightInfo = getSizeGuide(selectedSize, product.category);
 
   const telegramMessage = encodeURIComponent(
     `សួស្តីបង! ខ្ញុំចង់សួរពីស្តុក៖ ${product.nameKh} (ទំហំ ${selectedSize})។ កូនខ្ញុំទម្ងន់ប្រហែល...គីឡូ តើពាក់ត្រូវអត់បង?`
@@ -112,7 +112,7 @@ export const StandardCard: React.FC<StandardCardProps> = ({
             {sizes.map((s) => {
               const outOfStock = s.stock === 0;
               const isSelected = selectedSize === s.size;
-              const guide = SIZE_WEIGHT_GUIDE[s.size];
+              const guide = getSizeGuide(s.size, product.category);
               return (
                 <button
                   key={s.size}
@@ -155,19 +155,23 @@ export const StandardCard: React.FC<StandardCardProps> = ({
             })}
           </div>
 
-          {/* Child Weight Recommendation Box for Selected Size */}
+          {/* Child Recommendation Box for Selected Size */}
           {currentWeightInfo && currentWeightInfo.weight !== 'ទូទៅ' && (
             <div className="mt-2 p-1.5 rounded-lg bg-blue-50/80 border border-blue-200/80 text-[11px] text-blue-900 flex items-center justify-between">
-              <span className="font-semibold">⚖️ ទំហំ {selectedSize} ត្រូវនឹងកូន៖</span>
+              <span className="font-semibold">
+                {product.category === 'shoes' ? `👟 ទំហំ ${selectedSize} ត្រូវនឹងកូន៖` : `⚖️ ទំហំ ${selectedSize} ត្រូវនឹងកូន៖`}
+              </span>
               <span className="font-bold text-school-800">
-                ទម្ងន់ ~{currentWeightInfo.weight} ({currentWeightInfo.height})
+                {product.category === 'shoes'
+                  ? `${currentWeightInfo.height} (${currentWeightInfo.gradeHint})`
+                  : `ទម្ងន់ ~${currentWeightInfo.weight} (${currentWeightInfo.height})`}
               </span>
             </div>
           )}
 
           {/* Fitting Reassurance */}
           <p className="text-[10px] text-slate-500 text-center pt-1.5">
-            👕 អាចមកសាកល្បងទំហំផ្ទាល់នៅបញ្ជរសាលាបាន ឬឆាតសួរ Telegram
+            {product.category === 'shoes' ? '👟 អាចមកសាកល្បងទំហំផ្ទាល់នៅបញ្ជរសាលាបាន ឬឆាតសួរ Telegram' : '👕 អាចមកសាកល្បងទំហំផ្ទាល់នៅបញ្ជរសាលាបាន ឬឆាតសួរ Telegram'}
           </p>
         </div>
 

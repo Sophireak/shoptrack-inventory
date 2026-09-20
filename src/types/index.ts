@@ -1,4 +1,4 @@
-export type ProductCategory = 'all' | 'boy' | 'girl' | 'sport' | 'supplies';
+export type ProductCategory = 'all' | 'boy' | 'girl' | 'sport' | 'shoes' | 'supplies';
 
 export interface ProductSize {
   size: string;
@@ -39,9 +39,11 @@ export interface Product {
   id: string;
   name: string;
   nameKh: string;
-  category: 'boy' | 'girl' | 'sport' | 'supplies';
+  category: ProductCategory;
   priceKhr: number;
   priceUsd: number;
+  costKhr?: number;
+  costUsd?: number;
   image: string;
   description: string;
   badge: string;

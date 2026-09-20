@@ -373,14 +373,40 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
           </div>
         </div>
 
-        {/* 3. Regular Uniforms (Boy Shirt, Pant, Tie, Girl Shirt, Skirt) */}
+        {/* 3. Sneakers Quick Tap */}
+        {products
+          .filter((p) => p.category === 'shoes')
+          .map((p) => (
+            <div key={p.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h4 className="font-bold text-slate-900 text-xs sm:text-sm">
+                  👟 {p.nameKh} — {p.priceKhr.toLocaleString()} ៛
+                </h4>
+                <span className="text-[11px] text-slate-400">ទំហំ ៣១ ដល់ ៤២</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(p.sizes || []).map((sz) => (
+                  <button
+                    key={sz.size}
+                    type="button"
+                    onClick={() => handleAddStandard(p, sz.size, p.priceKhr, p.priceUsd)}
+                    className="px-2.5 py-1.5 bg-slate-50 hover:bg-school-600 hover:text-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 transition cursor-pointer"
+                  >
+                    +{sz.size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+        {/* 4. Regular Uniforms (Boy Shirt, Pant, Tie, Girl Shirt, Skirt) */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
           <h4 className="font-bold text-slate-900 text-xs sm:text-sm border-b border-slate-100 pb-2">
             👔 ឯកសណ្ឋានផ្លូវការប្រុស-ស្រី
           </h4>
 
           {products
-            .filter((p) => !p.isVariantGroup && p.id !== 'cs-id-holder')
+            .filter((p) => !p.isVariantGroup && p.id !== 'cs-id-holder' && p.category !== 'shoes')
             .map((p) => (
               <div key={p.id} className="space-y-1">
                 <div className="flex justify-between items-center text-xs">

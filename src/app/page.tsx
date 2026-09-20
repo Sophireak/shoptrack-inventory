@@ -14,7 +14,7 @@ import { Product, ProductCategory, CartItem, Order, StoreSettings, SportVariant 
 import { ShoppingBag, Sparkles, MapPin, Phone, MessageCircle } from 'lucide-react';
 
 export default function StorefrontPage() {
-  const [products] = useState<Product[]>(BASE_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(BASE_PRODUCTS);
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [currentCategory, setCurrentCategory] = useState<ProductCategory>('all');
@@ -33,7 +33,25 @@ export default function StorefrontPage() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
 
-  // Load cart and settings from localStorage on mount
+  // Helper to merge saved products with BASE_PRODUCTS
+  const mergeWithBaseProducts = (saved: Product[]): Product[] => {
+    const savedMap = new Map(saved.map((p) => [p.id, p]));
+    return BASE_PRODUCTS.map((base) => {
+      const s = savedMap.get(base.id);
+      if (!s) return base;
+      return {
+        ...base,
+        priceKhr: typeof s.priceKhr === 'number' ? s.priceKhr : base.priceKhr,
+        priceUsd: typeof s.priceUsd === 'number' ? s.priceUsd : base.priceUsd,
+        costKhr: typeof s.costKhr === 'number' ? s.costKhr : (base.costKhr ?? 0),
+        costUsd: typeof s.costUsd === 'number' ? s.costUsd : (base.costUsd ?? 0),
+        sizes: s.sizes || base.sizes,
+        variants: s.variants || base.variants,
+      };
+    });
+  };
+
+  // Load cart, settings, and products from localStorage on mount
   useEffect(() => {
     try {
       const savedSettings = localStorage.getItem('cs_settings');
@@ -41,6 +59,14 @@ export default function StorefrontPage() {
 
       const savedCart = localStorage.getItem('cs_cart');
       if (savedCart) setCart(JSON.parse(savedCart));
+
+      const savedProducts = localStorage.getItem('cs_products');
+      if (savedProducts) {
+        const parsed = JSON.parse(savedProducts);
+        if (Array.isArray(parsed)) {
+          setProducts(mergeWithBaseProducts(parsed));
+        }
+      }
     } catch {
       // ignore
     }

@@ -77,6 +77,7 @@ export interface SizeWeightInfo {
 }
 
 export const SIZE_WEIGHT_GUIDE: Record<string, SizeWeightInfo> = {
+  // Uniform clothing
   '20': { weight: '16-19 kg', height: '110-118 cm', gradeHint: 'ថ្នាក់ទី ១' },
   '22': { weight: '19-23 kg', height: '118-125 cm', gradeHint: 'ថ្នាក់ទី ១-២' },
   '24': { weight: '23-27 kg', height: '125-132 cm', gradeHint: 'ថ្នាក់ទី ២-៣' },
@@ -91,6 +92,28 @@ export const SIZE_WEIGHT_GUIDE: Record<string, SizeWeightInfo> = {
   'ស្តង់ដារ': { weight: 'ទូទៅ', height: 'ទូទៅ', gradeHint: 'គ្រប់កម្រិតថ្នាក់' },
 };
 
+export const SHOE_SIZE_GUIDE: Record<string, SizeWeightInfo> = {
+  '31': { weight: '19.5 cm', height: 'ប្រវែងជើង ~19.5 cm', gradeHint: 'ថ្នាក់ទី ១-២' },
+  '32': { weight: '20.0 cm', height: 'ប្រវែងជើង ~20.0 cm', gradeHint: 'ថ្នាក់ទី ២' },
+  '33': { weight: '20.5 cm', height: 'ប្រវែងជើង ~20.5 cm', gradeHint: 'ថ្នាក់ទី ២-៣' },
+  '34': { weight: '21.0 cm', height: 'ប្រវែងជើង ~21.0 cm', gradeHint: 'ថ្នាក់ទី ៣' },
+  '35': { weight: '21.5 cm', height: 'ប្រវែងជើង ~21.5 cm', gradeHint: 'ថ្នាក់ទី ៣-៤' },
+  '36': { weight: '22.0 cm', height: 'ប្រវែងជើង ~22.0 cm', gradeHint: 'ថ្នាក់ទី ៤' },
+  '37': { weight: '22.5 cm', height: 'ប្រវែងជើង ~22.5 cm', gradeHint: 'ថ្នាក់ទី ៤-៥' },
+  '38': { weight: '23.0 cm', height: 'ប្រវែងជើង ~23.0 cm', gradeHint: 'ថ្នាក់ទី ៥' },
+  '39': { weight: '23.5 cm', height: 'ប្រវែងជើង ~23.5 cm', gradeHint: 'ថ្នាក់ទី ៥-៦' },
+  '40': { weight: '24.0 cm', height: 'ប្រវែងជើង ~24.0 cm', gradeHint: 'ថ្នាក់ទី ៦' },
+  '41': { weight: '24.5 cm', height: 'ប្រវែងជើង ~24.5 cm', gradeHint: 'ថ្នាក់ទី ៦ (មាឌធំ)' },
+  '42': { weight: '25.0 cm', height: 'ប្រវែងជើង ~25.0 cm', gradeHint: 'ថ្នាក់ទី ៦ (មាឌធំ)' },
+};
+
+export const getSizeGuide = (size: string, category?: string): SizeWeightInfo | undefined => {
+  if (category === 'shoes') {
+    return SHOE_SIZE_GUIDE[size];
+  }
+  return SIZE_WEIGHT_GUIDE[size];
+};
+
 export const BASE_PRODUCTS: Product[] = [
   {
     id: 'cs-boy-shirt',
@@ -99,6 +122,8 @@ export const BASE_PRODUCTS: Product[] = [
     category: 'boy',
     priceKhr: 18000,
     priceUsd: 4.39,
+    costKhr: 13000,
+    costUsd: 3.17,
     badge: 'លក់ដាច់បំផុត',
     image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=700&auto=format&fit=crop&q=80',
     description: 'អាវសិស្សប្រុសពណ៌សដៃខ្លី កត្រង់ មានប៉ាក់ស្លាកសញ្ញាសាលាបឋមសិក្សាសម្តេចជាស៊ីមនៅលើហោប៉ៅ ក្រណាត់កប្បាសត្រជាក់ស្រួលពាក់។',
@@ -119,6 +144,8 @@ export const BASE_PRODUCTS: Product[] = [
     category: 'boy',
     priceKhr: 16000,
     priceUsd: 3.90,
+    costKhr: 11000,
+    costUsd: 2.68,
     badge: 'ស្តង់ដាររដ្ឋ',
     image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=700&auto=format&fit=crop&q=80',
     description: 'ខោខ្លីសិស្សប្រុសពណ៌ខៀវចាស់ ចង្កេះកៅស៊ូយឺតចំហៀង ផាសុកភាពខ្ពស់ ធន់នឹងការបោកគក់ ស័ក្តិសមសិស្សបឋមរត់លេង។',
@@ -138,6 +165,8 @@ export const BASE_PRODUCTS: Product[] = [
     category: 'boy',
     priceKhr: 6000,
     priceUsd: 1.46,
+    costKhr: 3500,
+    costUsd: 0.85,
     badge: 'ចាំបាច់',
     image: 'https://images.unsplash.com/photo-1589756823695-278bc923f962?w=700&auto=format&fit=crop&q=80',
     description: 'ក្រវ៉ាត់កពណ៌ខៀវចាស់ផ្លូវការ មានខ្សែយឺតពាក់កស្រួល មិនពិបាកចង សាកសមសម្រាប់សិស្សប្រុសពាក់រាល់ថ្ងៃចន្ទ ឬកម្មវិធីសាលា។',
@@ -152,6 +181,8 @@ export const BASE_PRODUCTS: Product[] = [
     category: 'girl',
     priceKhr: 18000,
     priceUsd: 4.39,
+    costKhr: 13000,
+    costUsd: 3.17,
     badge: 'លក់ដាច់បំផុត',
     image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=700&auto=format&fit=crop&q=80',
     description: 'អាវសិស្សស្រីពណ៌សម៉ូដកឈូកទន់ភ្លន់ ដៃខ្លី មានប៉ាក់ឡូហ្គោសាលា ក្រណាត់ទន់ស្រួល មិនងាយឡើងលឿងពេលបោកគក់។',
@@ -172,6 +203,8 @@ export const BASE_PRODUCTS: Product[] = [
     category: 'girl',
     priceKhr: 16000,
     priceUsd: 3.90,
+    costKhr: 11000,
+    costUsd: 2.68,
     badge: 'ស្តង់ដាររដ្ឋ',
     image: 'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=700&auto=format&fit=crop&q=80',
     description: 'សំពត់សិស្សស្រីពណ៌ខៀវចាស់ មានផ្នត់ជុំវិញ ចង្កេះកៅស៊ូយឺត មិនងាយជ្រីវជ្រួញ ងាយស្រួលបោកគក់។',
@@ -191,6 +224,8 @@ export const BASE_PRODUCTS: Product[] = [
     category: 'sport',
     priceKhr: 26000,
     priceUsd: 6.34,
+    costKhr: 19000,
+    costUsd: 4.63,
     badge: 'ពណ៌តាមកម្រិតថ្នាក់',
     image: 'https://images.unsplash.com/photo-1577471488278-16eec37ffcc2?w=700&auto=format&fit=crop&q=80',
     description: 'ឈុតកីឡាផ្លូវការសម្រាប់សិស្សបឋមសិក្សា (អាវយឺត + ខោកីឡា) សាច់ក្រណាត់យឺតទន់ត្រជាក់ ស្រួលរត់លេង។ ជ្រើសរើសពណ៌តាមកម្រិតថ្នាក់៖ ថ្នាក់ ១-២ (ខៀវ), ថ្នាក់ ៣-៤ (ទឹកក្រូច), ថ្នាក់ ៥-៦ (បៃតង)។',
@@ -262,6 +297,8 @@ export const BASE_PRODUCTS: Product[] = [
     category: 'supplies',
     priceKhr: 6500,
     priceUsd: 1.59,
+    costKhr: 4000,
+    costUsd: 0.98,
     badge: 'ឡូហ្គោសាលា',
     image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700&auto=format&fit=crop&q=80',
     description: 'ប្រអប់ជ័រការពារកាតសិស្ស និងខ្សែពាក់កមានព្រីនឈ្មោះ បឋមសិក្សា សម្តេចជាស៊ីម បែងចែកពណ៌តាមកម្រិតថ្នាក់ (១ ឈុត ៦,៥០០៛ / តែប្រអប់ ១,៥០០៛ / តែខ្សែ ៥,០០០៛)។',
@@ -269,6 +306,33 @@ export const BASE_PRODUCTS: Product[] = [
       { size: 'ពណ៌ខៀវ (ថ្នាក់ទី១-២)', stock: 120 },
       { size: 'ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)', stock: 95 },
       { size: 'ពណ៌បៃតង (ថ្នាក់ទី៥-៦)', stock: 80 },
+    ],
+  },
+  {
+    id: 'cs-sneakers',
+    name: 'Primary School Sneakers (White)',
+    nameKh: 'ស្បែកជើងប៉ាត់តាសិស្ស ពណ៌ស',
+    category: 'shoes',
+    priceKhr: 28000,
+    priceUsd: 6.83,
+    costKhr: 20000,
+    costUsd: 4.88,
+    badge: 'ពេញនិយម',
+    image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=700&auto=format&fit=crop&q=80',
+    description: 'ស្បែកជើងប៉ាត់តាពណ៌ស សាច់ទន់ស្រាល បាតកៅស៊ូស្អិតមិនរអិល សម្រាប់សិស្សបឋមសិក្សាពាក់រៀនកីឡា និងសកម្មភាពប្រចាំថ្ងៃ។',
+    sizes: [
+      { size: '31', stock: 15 },
+      { size: '32', stock: 20 },
+      { size: '33', stock: 25 },
+      { size: '34', stock: 25 },
+      { size: '35', stock: 22 },
+      { size: '36', stock: 20 },
+      { size: '37', stock: 18 },
+      { size: '38', stock: 15 },
+      { size: '39', stock: 12 },
+      { size: '40', stock: 10 },
+      { size: '41', stock: 8 },
+      { size: '42', stock: 5 },
     ],
   },
 ];
