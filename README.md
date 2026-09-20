@@ -18,16 +18,18 @@ A modern, mobile-first dual-application built for the official school uniform sh
 
 ---
 
-## 👕 7 Official School Products Catalog
+## 👕 Official School Products & Grade Sport Color Sets
 
-| # | Item Name (Khmer) | Item Name (English) | Sizing Matrix | Standard Price |
+| # | Item Name (Khmer) | Item Name (English) | Grade & Color / Sizing Matrix | Standard Price |
 |---|---|---|---|---|
 | **1** | **អាវសិស្សប្រុស (សាច់ក្រណាត់ស)** | Boy Student Shirt | Size 24, 26, 28, 30, 32, 34 | 18,000 ៛ (~$4.39) |
 | **2** | **ខោខ្លីសិស្សប្រុស (ពណ៌ខៀវចាស់)** | Boy Student Pants | Size 22, 24, 26, 28, 30, 32 | 20,000 ៛ (~$4.88) |
-| **3** | **ក្រវ៉ាត់កសិស្សប្រុស (មានកៅស៊ូយឺត)** | Boy Student Tie | Free Size (Elastic Band) | 5,000 ៛ (~$1.22) |
+| **3** | **ក្រវ៉ាត់កសិស្សប្រុស (មានកៅស៊ូយឺត)** | Boy Student Tie | Free Size (Grade 1–6) | 5,000 ៛ (~$1.22) |
 | **4** | **អាវសិស្សស្រី (សាច់ក្រណាត់ស កបត់)** | Girl Student Shirt | Size 24, 26, 28, 30, 32, 34 | 18,000 ៛ (~$4.39) |
 | **5** | **សំពត់សិស្សស្រី (ពណ៌ខៀវចាស់ មានផ្នត់)** | Girl Student Skirt | Size 22, 24, 26, 28, 30, 32 | 20,000 ៛ (~$4.88) |
-| **6** | **ឈុតកីឡាសាលា (អាវយឺត + ខោកីឡា)** | Unisex Sport Uniform Set | Size S, M, L, XL | 26,000 ៛ (~$6.34) |
+| **6a** | **ឈុតកីឡាសាលា ពណ៌ខៀវ (ថ្នាក់ទី១ - ទី២)** | Sport Uniform Set - Blue | **Grade 1–2 (Blue)**: 20, 22, 24, 26, 28, 30, M, L, XL | 26,000 ៛ (~$6.34) |
+| **6b** | **ឈុតកីឡាសាលា ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣ - ទី៤)** | Sport Uniform Set - Orange | **Grade 3–4 (Orange)**: 20, 22, 24, 26, 28, 30, M, L, XL | 26,000 ៛ (~$6.34) |
+| **6c** | **ឈុតកីឡាសាលា ពណ៌បៃតង (ថ្នាក់ទី៥ - ទី៦)** | Sport Uniform Set - Green | **Grade 5–6 (Green)**: 20, 22, 24, 26, 28, 30, M, L, XL | 26,000 ៛ (~$6.34) |
 | **7** | **ប្រអប់កាតសិស្ស និងខ្សែពាក់ក** | ID Card Holder & Lanyard | Blue Cord / Red Cord | 4,000 ៛ (~$0.98) |
 
 ---
