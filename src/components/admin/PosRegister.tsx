@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { Search, Plus, Minus, Trash2, Printer, CheckCircle, ShoppingCart } from 'lucide-react';
-import { Product, StoreSettings, CartItem } from '@/types';
+import { Product, StoreSettings, CartItem, Order } from '@/types';
 import { ID_HOLDER_VARIANTS, ID_HOLDER_TYPES } from '@/lib/catalog';
+import { KhqrModal } from '@/components/KhqrModal';
 
 interface PosRegisterProps {
   products: Product[];
@@ -23,6 +24,7 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
   const [posCart, setPosCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'khqr'>('cash');
+  const [pendingKhqrOrder, setPendingKhqrOrder] = useState<Order | null>(null);
   const [lastReceipt, setLastReceipt] = useState<{
     orderId: string;
     items: CartItem[];
@@ -166,14 +168,11 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
   const totalKhr = posCart.reduce((sum, it) => sum + it.priceKhr * it.qty, 0);
   const totalUsd = totalKhr / 4100;
 
-  const handleCheckout = async () => {
-    if (posCart.length === 0) return;
-    const orderId = `CS-POS-${Math.floor(1000 + Math.random() * 9000)}`;
-
+  const executeFinalCheckout = async (orderId: string, payMethod: string) => {
     await onRecordSale({
       items: posCart,
       totalKhr,
-      paymentMethod: paymentMethod === 'cash' ? 'Cash at Counter' : 'KHQR Bakong',
+      paymentMethod: payMethod,
     });
 
     setLastReceipt({
@@ -181,10 +180,43 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
       items: [...posCart],
       totalKhr,
       date: new Date().toLocaleString('km-KH'),
-      paymentMethod: paymentMethod === 'cash' ? 'សាច់ប្រាក់សុទ្ធ' : 'KHQR Bakong',
+      paymentMethod: payMethod === 'Cash at Counter' ? 'សាច់ប្រាក់សុទ្ធ' : 'KHQR Bakong (ABA)',
     });
 
     setPosCart([]);
+    setPendingKhqrOrder(null);
+  };
+
+  const handleCheckout = async () => {
+    if (posCart.length === 0) return;
+    const orderId = `CS-POS-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    if (paymentMethod === 'khqr') {
+      const order: Order = {
+        id: orderId,
+        orderId,
+        customerName: 'អតិថិជនទិញផ្ទាល់នៅបញ្ជរ (Walk-in)',
+        phone: 'បញ្ជរសាលា',
+        studentGrade: 'ទូទៅ',
+        pickupMethod: 'Free School Pickup',
+        paymentMethod: 'KHQR Bakong (ABA)',
+        items: posCart.map((it) => ({
+          id: it.id,
+          name: it.name,
+          nameKh: it.nameKh,
+          size: it.size,
+          price: it.priceKhr,
+          qty: it.qty,
+        })),
+        totalKhr,
+        totalUsd,
+        status: 'completed',
+        createdAt: new Date().toISOString(),
+      };
+      setPendingKhqrOrder(order);
+    } else {
+      await executeFinalCheckout(orderId, 'Cash at Counter');
+    }
   };
 
   const handlePrint = () => {
@@ -624,6 +656,19 @@ export const PosRegister: React.FC<PosRegisterProps> = ({
           </div>
         )}
       </div>
+
+      {/* Customer-Facing KHQR Modal for Counter */}
+      <KhqrModal
+        isOpen={!!pendingKhqrOrder}
+        order={pendingKhqrOrder}
+        settings={settings}
+        onClose={() => setPendingKhqrOrder(null)}
+        onComplete={() => {
+          if (pendingKhqrOrder) {
+            executeFinalCheckout(pendingKhqrOrder.orderId, 'KHQR Bakong (ABA)');
+          }
+        }}
+      />
     </div>
   );
 };

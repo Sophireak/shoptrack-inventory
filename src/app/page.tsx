@@ -113,6 +113,13 @@ export default function StorefrontPage() {
         if (!parsed.location || parsed.location.includes('មុខអគាររដ្ឋបាល')) {
           parsed.location = DEFAULT_SETTINGS.location;
         }
+        if (!parsed.customQrUrl || !parsed.accountName) {
+          parsed.customQrUrl = DEFAULT_SETTINGS.customQrUrl;
+          parsed.accountName = DEFAULT_SETTINGS.accountName;
+          parsed.accountKhr = DEFAULT_SETTINGS.accountKhr;
+          parsed.accountUsd = DEFAULT_SETTINGS.accountUsd;
+          parsed.bakongId = DEFAULT_SETTINGS.bakongId;
+        }
         setSettings(parsed);
       }
 
@@ -641,6 +648,7 @@ export default function StorefrontPage() {
       <KhqrModal
         isOpen={isKhqrOpen}
         order={currentOrder}
+        settings={settings}
         bakongId={settings.bakongId}
         onClose={() => setIsKhqrOpen(false)}
         onComplete={handleCompleteKhqr}

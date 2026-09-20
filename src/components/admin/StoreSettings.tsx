@@ -121,6 +121,67 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
           </div>
         </div>
 
+        {/* ABA Specific Settings */}
+        <div className="pt-3 border-t border-slate-100 space-y-3">
+          <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#002f49]"></span>
+            <span>ព័ត៌មានគណនី ABA KHQR ផ្លូវការ</span>
+          </h5>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">
+              ឈ្មោះម្ចាស់គណនី ABA (Account Name)
+            </label>
+            <input
+              type="text"
+              placeholder="SOVATKANHCHANA SENG"
+              value={formData.accountName || ''}
+              onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium text-xs focus:ring-2 focus:ring-school-500 uppercase"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                ៛ លេខគណនី KHR
+              </label>
+              <input
+                type="text"
+                placeholder="008 906 861"
+                value={formData.accountKhr || ''}
+                onChange={(e) => setFormData({ ...formData, accountKhr: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-mono font-bold text-xs focus:ring-2 focus:ring-school-500"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                $ លេខគណនី USD
+              </label>
+              <input
+                type="text"
+                placeholder="001 155 614"
+                value={formData.accountUsd || ''}
+                onChange={(e) => setFormData({ ...formData, accountUsd: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-mono font-bold text-xs focus:ring-2 focus:ring-school-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">
+              ផ្លូវរូបភាព ABA KHQR (Standee Image URL)
+            </label>
+            <input
+              type="text"
+              placeholder="/images/aba-khqr.jpg"
+              value={formData.customQrUrl || ''}
+              onChange={(e) => setFormData({ ...formData, customQrUrl: e.target.value })}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium text-xs focus:ring-2 focus:ring-school-500"
+            />
+          </div>
+        </div>
+
         <div className="pt-4 flex items-center justify-between">
           {saved && (
             <span className="text-emerald-600 font-bold text-xs animate-in fade-in">

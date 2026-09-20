@@ -6,8 +6,11 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   phone1: '012 345 678',
   phone2: '098 765 432',
   telegram: 'bNha_dev',
-  bakongId: 'cheasim_primary@acleda',
-  customQrUrl: '',
+  bakongId: '008906861@abab',
+  customQrUrl: '/images/aba-khqr.jpg',
+  accountName: 'SOVATKANHCHANA SENG',
+  accountKhr: '008 906 861',
+  accountUsd: '001 155 614',
 };
 
 export const ID_HOLDER_TYPES: Record<'set' | 'holder' | 'lanyard', IdHolderTypeConfig> = {

@@ -105,4 +105,7 @@ export interface StoreSettings {
   telegram: string;
   bakongId: string;
   customQrUrl: string;
+  accountName?: string;
+  accountKhr?: string;
+  accountUsd?: string;
 }

@@ -352,10 +352,10 @@
       {
         "size": "ពណ៌ខៀវ (ថ្នាក់ទី១-២)",
         "stock": 120,
-        "priceKhr": 6500,
-        "priceUsd": 1.59,
-        "costKhr": 4000,
-        "costUsd": 0.98
+        "priceKhr": 100,
+        "priceUsd": 0.02,
+        "costKhr": 50,
+        "costUsd": 0.01
       },
       {
         "size": "ពណ៌ទឹកក្រូច (ថ្នាក់ទី៣-៤)",
@@ -382,7 +382,11 @@
     "sizes": [
       {
         "size": "31",
-        "stock": 15
+        "stock": 14,
+        "priceKhr": 100,
+        "priceUsd": 0.02,
+        "costKhr": 20000,
+        "costUsd": 4.88
       },
       {
         "size": "32",

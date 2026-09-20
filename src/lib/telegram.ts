@@ -19,7 +19,7 @@ export async function sendTelegramOrderAlert(order: Order): Promise<boolean> {
 📞 *លេខទូរស័ព្ទ:* ${order.phone}
 🎒 *សិស្ស:* ${order.studentName || 'មិនបញ្ជាក់'} (${order.studentGrade})
 🚚 *ការទទួល:* ${order.pickupMethod}
-💳 *វិធីទូទាត់:* ${order.paymentMethod}
+💳 *វិធីទូទាត់:* ${order.paymentMethod.includes('KHQR') ? '📱 KHQR Bakong (ABA: SOVATKANHCHANA SENG)' : order.paymentMethod}
 
 📦 *មុខទំនិញ:*
 ${itemsList}
