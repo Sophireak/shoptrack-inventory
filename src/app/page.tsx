@@ -10,6 +10,7 @@ import { CheckoutModal } from '@/components/CheckoutModal';
 import { KhqrModal } from '@/components/KhqrModal';
 import { SizeGuideModal } from '@/components/SizeGuideModal';
 import { BASE_PRODUCTS, DEFAULT_SETTINGS, ID_HOLDER_VARIANTS, ID_HOLDER_TYPES } from '@/lib/catalog';
+import { generateEmvcoKhqr, computeKhqrMd5 } from '@/lib/khqrEngine';
 import { Product, ProductCategory, CartItem, Order, StoreSettings, SportVariant } from '@/types';
 import { ShoppingBag, Sparkles, MapPin, Phone, MessageCircle } from 'lucide-react';
 
@@ -373,6 +374,27 @@ export default function StorefrontPage() {
     const grandTotalKhr = cartTotalKhr + formData.shippingFeeKhr;
     const grandTotalUsd = grandTotalKhr / 4100;
 
+    let qrString: string | undefined = undefined;
+    let md5: string | undefined = undefined;
+    if (formData.paymentMethod.includes('KHQR')) {
+      try {
+        qrString = generateEmvcoKhqr({
+          accountNumber: settings.accountKhr || '008 906 861',
+          bankSwift: 'abaakhppxxx@abaa',
+          bankName: 'ABA Bank',
+          merchantName: settings.accountName || 'SOVATKANHCHANA SENG',
+          currency: 'KHR',
+          amount: grandTotalKhr,
+          billNumber: orderId,
+          storeLabel: 'Chea Sim Uniform Store',
+          expirationMinutes: 1,
+        });
+        md5 = computeKhqrMd5(qrString);
+      } catch (e) {
+        console.warn('Error generating KHQR payload:', e);
+      }
+    }
+
     const newOrder: Order = {
       id: orderId,
       orderId,
@@ -394,6 +416,8 @@ export default function StorefrontPage() {
       totalUsd: grandTotalUsd,
       status: 'pending',
       createdAt: new Date().toISOString(),
+      qrString,
+      md5,
     };
 
     // Save in local storage orders history

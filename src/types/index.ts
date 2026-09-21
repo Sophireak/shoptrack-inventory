@@ -95,6 +95,8 @@ export interface Order {
   totalUsd: number;
   status: 'pending' | 'confirmed' | 'ready' | 'completed' | 'cancelled';
   createdAt: string;
+  md5?: string;
+  qrString?: string;
 }
 
 export interface StoreSettings {

@@ -40,25 +40,18 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   const [timeLeft, setTimeLeft] = useState<number>(60);
   const [isExpired, setIsExpired] = useState<boolean>(false);
   const [dynamicQrUrl, setDynamicQrUrl] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'dynamic' | 'standee'>('dynamic');
+  const [md5Hash, setMd5Hash] = useState<string>('');
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  
-  // Checking status message
-  const [checkMessage, setCheckMessage] = useState<string>('កំពុងរង់ចាំការស្កេនទូទាត់...');
 
   // Payment Status: 'waiting' | 'paid'
   const [paymentStatus, setPaymentStatus] = useState<'waiting' | 'paid'>('waiting');
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const autoDetectRef = useRef<NodeJS.Timeout | null>(null);
-  const statusMsgRef = useRef<NodeJS.Timeout | null>(null);
 
   const accountName = settings.accountName || 'SOVATKANHCHANA SENG';
   const accountKhr = settings.accountKhr || '008 906 861';
-  const accountUsd = settings.accountUsd || '001 155 614';
-  const standeeImageUrl = settings.customQrUrl || '/images/aba-khqr.jpg';
 
-  // 1. Generate Dynamic QR Code with exact item price and Tag 99 expiration
+  // 1. Generate Dynamic QR Code with exact item price, Tag 99 expiration, and MD5
   const generateQr = async () => {
     if (!order) return;
     try {
@@ -74,6 +67,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         expirationMinutes: 1,
       });
       setDynamicQrUrl(result.dataUrl);
+      setMd5Hash(result.md5);
     } catch (err) {
       console.warn('Dynamic QR generation fallback:', err);
     }
@@ -83,8 +77,6 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   const handlePaymentSuccess = () => {
     if (pollingRef.current) clearInterval(pollingRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
-    if (autoDetectRef.current) clearTimeout(autoDetectRef.current);
-    if (statusMsgRef.current) clearTimeout(statusMsgRef.current);
 
     setPaymentStatus('paid');
     confetti({ particleCount: 160, spread: 90, origin: { y: 0.5 } });
@@ -105,7 +97,6 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   const resetTimer = () => {
     setTimeLeft(60);
     setIsExpired(false);
-    setCheckMessage('កំពុងរង់ចាំការស្កេនទូទាត់...');
     generateQr();
   };
 
@@ -114,7 +105,6 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
       setPaymentStatus('waiting');
       setTimeLeft(60);
       setIsExpired(false);
-      setCheckMessage('កំពុងរង់ចាំការស្កេនទូទាត់...');
       generateQr();
 
       // 60s countdown timer
@@ -130,32 +120,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         });
       }, 1000);
 
-      // Progressive status message:
-      // After 6s: "បានចាប់សញ្ញាស្កេន កំពុងផ្ទៀងផ្ទាត់ការផ្ទេរប្រាក់..."
-      if (statusMsgRef.current) clearTimeout(statusMsgRef.current);
-      statusMsgRef.current = setTimeout(() => {
-        setCheckMessage('បានចាប់សញ្ញាស្កេន កំពុងផ្ទៀងផ្ទាត់ការផ្ទេរប្រាក់...');
-      }, 6000);
-
-      // Auto-detect payment completion after 12s (realistic ABA transfer confirmation window)
-      if (autoDetectRef.current) clearTimeout(autoDetectRef.current);
-      autoDetectRef.current = setTimeout(() => {
-        handlePaymentSuccess();
-      }, 12000);
-
-      // App-switch detection: when user switches back from ABA Mobile app, verify immediately!
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-          // User returned to browser after paying in bank app
-          setTimeout(() => {
-            handlePaymentSuccess();
-          }, 800);
-        }
-      };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      window.addEventListener('focus', handleVisibilityChange);
-
-      // Background Polling /api/orders (captures remote confirmation from admin tab)
+      // Background Polling /api/orders (captures remote confirmation from Telegram or admin tab)
       if (pollingRef.current) clearInterval(pollingRef.current);
       pollingRef.current = setInterval(async () => {
         try {
@@ -174,12 +139,8 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
       }, 2000);
 
       return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('focus', handleVisibilityChange);
         if (timerRef.current) clearInterval(timerRef.current);
         if (pollingRef.current) clearInterval(pollingRef.current);
-        if (autoDetectRef.current) clearTimeout(autoDetectRef.current);
-        if (statusMsgRef.current) clearTimeout(statusMsgRef.current);
       };
     }
   }, [isOpen, order?.orderId]);
@@ -302,7 +263,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                 <div className="flex items-center justify-between text-[11px] text-slate-600 pt-0.5">
                   <div className="flex items-center gap-1.5">
                     <Loader2 className="w-3.5 h-3.5 text-school-600 animate-spin" />
-                    <span className="font-medium text-slate-700">{checkMessage}</span>
+                    <span className="font-medium text-slate-700">កំពុងរង់ចាំការស្កេនទូទាត់...</span>
                   </div>
                   <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
                     Live Check
@@ -310,33 +271,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                 </div>
               </div>
 
-              {/* QR Code Tabs (Dynamic with Price vs Original Standee) */}
-              <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('dynamic')}
-                  className={`flex-1 py-1.5 rounded-lg font-bold transition text-center cursor-pointer ${
-                    activeTab === 'dynamic'
-                      ? 'bg-white text-school-800 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  ⚡ QR ជាមួយតម្លៃ ({order.totalKhr.toLocaleString()} ៛)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('standee')}
-                  className={`flex-1 py-1.5 rounded-lg font-bold transition text-center cursor-pointer ${
-                    activeTab === 'standee'
-                      ? 'bg-white text-school-800 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  🏦 ABA Standee ដើម
-                </button>
-              </div>
-
-              {/* QR Code Display Container */}
+              {/* Dynamic KHQR Code Display Container (NO STANDEE TAB) */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-md flex flex-col items-center justify-center min-h-[260px] relative">
                 {isExpired ? (
                   <div className="py-8 text-center space-y-3">
@@ -356,7 +291,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                       <span>បង្កើត QR ម្តងទៀត</span>
                     </button>
                   </div>
-                ) : activeTab === 'dynamic' ? (
+                ) : (
                   <div className="text-center space-y-2 w-full">
                     {/* Official KHQR Card Header */}
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100 w-full px-2">
@@ -388,17 +323,23 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                     <div className="text-[11px] text-slate-500 text-center font-sans">
                       ស្កេនជាមួយ ABA Mobile វានឹងបញ្ចូលចំនួន <strong>{order.totalKhr.toLocaleString()} ៛</strong> ដោយស្វ័យប្រវត្តិ!
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center space-y-2">
-                    <div className="max-w-[260px] rounded-xl overflow-hidden border border-slate-200 shadow-xs mx-auto">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={standeeImageUrl}
-                        alt="ABA Standee"
-                        className="w-full h-auto object-contain block"
-                      />
-                    </div>
+
+                    {md5Hash && (
+                      <div className="pt-1 flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-mono">
+                        <span>MD5:</span>
+                        <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
+                          {md5Hash.slice(0, 16)}...
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(md5Hash, 'md5')}
+                          className="text-school-600 hover:text-school-800 p-0.5 cursor-pointer"
+                          title="Copy MD5"
+                        >
+                          {copiedField === 'md5' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -432,7 +373,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
 
                 <div className="grid grid-cols-2 gap-2">
                   <a
-                    href={dynamicQrUrl || standeeImageUrl}
+                    href={dynamicQrUrl}
                     download={`aba-khqr-${order.orderId}.png`}
                     className="bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition text-center cursor-pointer"
                   >
@@ -522,6 +463,14 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                   <span>វិធីទូទាត់៖</span>
                   <span className="font-bold text-emerald-700">ABA KHQR (SOVATKANHCHANA SENG)</span>
                 </div>
+                {(order.md5 || md5Hash) && (
+                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 pt-0.5">
+                    <span>KHQR MD5:</span>
+                    <span className="font-bold text-slate-700 bg-slate-100 px-1 py-0.5 rounded">
+                      {(order.md5 || md5Hash).slice(0, 16)}...
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Items List */}

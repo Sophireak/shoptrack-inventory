@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { sendTelegramOrderAlert } from '@/lib/telegram';
+import { generateEmvcoKhqr, computeKhqrMd5 } from '@/lib/khqrEngine';
 import { Order } from '@/types';
 
 const dataDir = path.join(process.cwd(), 'data');
@@ -38,6 +39,27 @@ export async function POST(req: Request) {
 
     if (!orderData || !orderData.orderId) {
       return NextResponse.json({ success: false, error: 'Invalid order data' }, { status: 400 });
+    }
+
+    // Ensure KHQR md5 is populated for KHQR payments
+    if (!orderData.md5 && orderData.paymentMethod?.includes('KHQR')) {
+      try {
+        const qrString = generateEmvcoKhqr({
+          accountNumber: '008906861',
+          bankSwift: 'abaakhppxxx@abaa',
+          bankName: 'ABA Bank',
+          merchantName: 'SOVATKANHCHANA SENG',
+          currency: 'KHR',
+          amount: orderData.totalKhr,
+          billNumber: orderData.orderId,
+          storeLabel: 'Chea Sim Uniform Store',
+          expirationMinutes: 1,
+        });
+        orderData.qrString = qrString;
+        orderData.md5 = computeKhqrMd5(qrString);
+      } catch (err) {
+        console.warn('Server-side KHQR calculation fallback:', err);
+      }
     }
 
     // 1. If Supabase is configured, insert into PostgreSQL
