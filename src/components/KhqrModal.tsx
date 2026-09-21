@@ -120,10 +120,11 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         });
       }, 1000);
 
-      // Background Polling /api/orders (captures remote confirmation from Telegram or admin tab)
+      // Background Polling /api/orders & /api/bakong/check-md5 every 2 seconds
       if (pollingRef.current) clearInterval(pollingRef.current);
       pollingRef.current = setInterval(async () => {
         try {
+          // 1. Check local order status (updated by Telegram confirm button or Admin)
           const res = await fetch('/api/orders');
           if (res.ok) {
             const data = await res.json();
@@ -131,6 +132,24 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
             const current = allOrders.find((o) => o.orderId === order.orderId);
             if (current && (current.status === 'confirmed' || current.status === 'completed')) {
               handlePaymentSuccess();
+              return;
+            }
+          }
+
+          // 2. Also check Bakong Open API via /api/bakong/check-md5 if MD5 exists
+          const md5Val = md5Hash || order.md5;
+          if (md5Val) {
+            const bakongRes = await fetch('/api/bakong/check-md5', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ md5: md5Val, orderId: order.orderId }),
+            });
+            if (bakongRes.ok) {
+              const bakongData = await bakongRes.json();
+              if (bakongData.paid) {
+                handlePaymentSuccess();
+                return;
+              }
             }
           }
         } catch {
@@ -143,7 +162,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         if (pollingRef.current) clearInterval(pollingRef.current);
       };
     }
-  }, [isOpen, order?.orderId]);
+  }, [isOpen, order?.orderId, md5Hash]);
 
   const copyToClipboard = (text: string, fieldName: string) => {
     try {
@@ -370,6 +389,9 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <span>ខ្ញុំបានផ្ទេររួចរាល់ (បង្ហាញវិក្កយបត្រភ្លាមៗ)</span>
                 </button>
+                <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-2 text-[10.5px] text-amber-900 text-center leading-relaxed">
+                  💡 បន្ទាប់ពីស្កេន និងផ្ទេរប្រាក់ក្នុង ABA រួចរាល់ សូមចុចប៊ូតុងខាងលើដើម្បីទទួលបានវិក្កយបត្រភ្លាមៗ!
+                </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <a

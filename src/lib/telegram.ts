@@ -1,10 +1,31 @@
+import fs from 'fs';
+import path from 'path';
 import { Order } from '@/types';
 
-export async function sendTelegramOrderAlert(order: Order): Promise<boolean> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+function getStoredTokenAndChatId(): { token?: string; chatId?: string } {
+  let token = process.env.TELEGRAM_BOT_TOKEN;
+  let chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
+    try {
+      const settingsPath = path.join(process.cwd(), 'data', 'settings.json');
+      if (fs.existsSync(settingsPath)) {
+        const parsed = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+        if (!token && parsed.telegramBotToken) token = parsed.telegramBotToken;
+        if (!chatId && parsed.telegramChatId) chatId = parsed.telegramChatId;
+      }
+    } catch {}
+  }
+  return { token, chatId };
+}
+
+export async function sendTelegramOrderAlert(order: Order): Promise<boolean> {
+  const { token, chatId } = getStoredTokenAndChatId();
+
+  if (!token || !chatId) {
+    console.warn(
+      '⚠️ Telegram Bot Alert skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured in .env.local or Admin Settings.'
+    );
     return false;
   }
 

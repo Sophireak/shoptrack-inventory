@@ -110,4 +110,7 @@ export interface StoreSettings {
   accountName?: string;
   accountKhr?: string;
   accountUsd?: string;
+  telegramBotToken?: string;
+  telegramChatId?: string;
+  bakongAuthToken?: string;
 }

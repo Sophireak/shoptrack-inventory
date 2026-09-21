@@ -122,10 +122,21 @@ export default function AdminPage() {
     // 2. Sync from server API
     const fetchServerData = async () => {
       try {
-        const [invRes, ordersRes] = await Promise.all([
+        const [invRes, ordersRes, settingsRes] = await Promise.all([
           fetch('/api/inventory'),
           fetch('/api/orders'),
+          fetch('/api/settings'),
         ]);
+
+        if (settingsRes.ok) {
+          const settJson = await settingsRes.json();
+          if (settJson.success && settJson.data) {
+            setSettings(settJson.data);
+            try {
+              localStorage.setItem('cs_settings', JSON.stringify(settJson.data));
+            } catch {}
+          }
+        }
 
         if (invRes.ok) {
           const invJson = await invRes.json();
@@ -436,6 +447,11 @@ export default function AdminPage() {
     } catch {
       // ignore
     }
+    fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newSettings),
+    }).catch((err) => console.warn('Sync settings to /api/settings failed:', err));
   };
 
   return (
