@@ -43,10 +43,11 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   const [md5Hash, setMd5Hash] = useState<string>('');
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Payment Status: 'waiting' | 'paid'
   const [paymentStatus, setPaymentStatus] = useState<'waiting' | 'paid'>('waiting');
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const md5Ref = useRef<string>('');
+  const generatedForOrderIdRef = useRef<string | null>(null);
 
   const accountName = settings.accountName || 'SOVATKANHCHANA SENG';
   const accountKhr = settings.accountKhr || '008 906 861';
@@ -68,6 +69,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
       });
       setDynamicQrUrl(result.dataUrl);
       setMd5Hash(result.md5);
+      md5Ref.current = result.md5;
     } catch (err) {
       console.warn('Dynamic QR generation fallback:', err);
     }
@@ -102,10 +104,14 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
 
   useEffect(() => {
     if (isOpen && order) {
-      setPaymentStatus('waiting');
-      setTimeLeft(60);
-      setIsExpired(false);
-      generateQr();
+      // Generate QR only once per order session (prevents endless re-generation loop)
+      if (generatedForOrderIdRef.current !== order.orderId) {
+        generatedForOrderIdRef.current = order.orderId;
+        setPaymentStatus('waiting');
+        setTimeLeft(60);
+        setIsExpired(false);
+        generateQr();
+      }
 
       // 60s countdown timer
       if (timerRef.current) clearInterval(timerRef.current);
@@ -137,7 +143,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
           }
 
           // 2. Also check Bakong Open API via /api/bakong/check-md5 if MD5 exists
-          const md5Val = md5Hash || order.md5;
+          const md5Val = md5Ref.current || order.md5;
           if (md5Val) {
             const bakongRes = await fetch('/api/bakong/check-md5', {
               method: 'POST',
@@ -161,8 +167,10 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         if (timerRef.current) clearInterval(timerRef.current);
         if (pollingRef.current) clearInterval(pollingRef.current);
       };
+    } else if (!isOpen) {
+      generatedForOrderIdRef.current = null;
     }
-  }, [isOpen, order?.orderId, md5Hash]);
+  }, [isOpen, order?.orderId]);
 
   const copyToClipboard = (text: string, fieldName: string) => {
     try {
