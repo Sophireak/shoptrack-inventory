@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { sendTelegramOrderAlert, pollTelegramUpdates } from '@/lib/telegram';
+import { sendTelegramOrderAlert, pollTelegramUpdates, markOrderCompleted } from '@/lib/telegram';
 import { generateEmvcoKhqr, computeKhqrMd5 } from '@/lib/khqrEngine';
 import { Order } from '@/types';
 
@@ -111,11 +111,13 @@ export async function POST(req: Request) {
       saveStoredOrders(updated);
     }
 
-    // 3. Dispatch Telegram Bot alert
-    try {
-      await sendTelegramOrderAlert(orderData);
-    } catch (tgErr) {
-      console.warn('Telegram alert error:', tgErr);
+    // 3. Dispatch Telegram Bot alert ONLY IF payment is already completed
+    if (orderData.status === 'completed') {
+      try {
+        await sendTelegramOrderAlert(orderData);
+      } catch (tgErr) {
+        console.warn('Telegram alert error:', tgErr);
+      }
     }
 
     return NextResponse.json({
@@ -165,6 +167,12 @@ export async function PATCH(req: Request) {
     const { orderId, status } = await req.json();
     if (!orderId || !status) {
       return NextResponse.json({ success: false, error: 'orderId and status required' }, { status: 400 });
+    }
+
+    if (status === 'completed') {
+      const completed = await markOrderCompleted(orderId);
+      const orders = getStoredOrders();
+      return NextResponse.json({ success: true, message: 'Order marked as completed', data: orders, order: completed });
     }
 
     const orders = getStoredOrders();

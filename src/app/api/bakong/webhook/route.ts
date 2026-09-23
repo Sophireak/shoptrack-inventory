@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { Order } from '@/types';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { markOrderCompleted } from '@/lib/telegram';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,24 +43,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
-    const updated = orders.map((o) =>
-      o.orderId === target.orderId ? { ...o, status: 'completed' as const } : o
-    );
-    fs.writeFileSync(ordersFilePath, JSON.stringify(updated, null, 2), 'utf-8');
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('orders').update({ status: 'completed' }).eq('order_number', target.orderId);
-      } catch (e) {
-        console.warn('Supabase webhook sync fallback:', e);
-      }
-    }
+    const updated = await markOrderCompleted(target.orderId);
 
     return NextResponse.json({
       success: true,
       message: `Payment confirmed for order #${target.orderId}`,
       orderId: target.orderId,
       status: 'completed',
+      order: updated,
     });
   } catch (err) {
     console.error('Bakong webhook error:', err);

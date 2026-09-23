@@ -97,6 +97,7 @@ export interface Order {
   createdAt: string;
   md5?: string;
   qrString?: string;
+  telegramAlertSent?: boolean;
 }
 
 export interface StoreSettings {

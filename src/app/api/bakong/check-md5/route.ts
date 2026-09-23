@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { Order } from '@/types';
+import { markOrderCompleted } from '@/lib/telegram';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,17 +64,16 @@ export async function POST(req: Request) {
           const bakongData = await bakongRes.json();
           // NBC Bakong responseCode: 0 means transaction received and settled
           if (bakongData.responseCode === 0) {
+            let completedOrder: Order | null = null;
             if (order) {
-              const updated = orders.map((o) => (o.orderId === order.orderId ? { ...o, status: 'completed' as const } : o));
-              try {
-                fs.writeFileSync(ordersFilePath, JSON.stringify(updated, null, 2), 'utf-8');
-              } catch {}
+              completedOrder = await markOrderCompleted(order.orderId);
             }
             return NextResponse.json({
               success: true,
               paid: true,
               source: 'bakong_api',
               data: bakongData.data,
+              order: completedOrder,
             });
           }
         }

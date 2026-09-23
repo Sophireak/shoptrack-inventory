@@ -56,7 +56,16 @@ export async function markOrderCompleted(orderId: string): Promise<Order | null>
   const target = orders.find((o) => o.orderId === orderId);
   if (!target) return null;
 
-  const updated = orders.map((o) => (o.orderId === orderId ? { ...o, status: 'completed' as const } : o));
+  const wasAlreadyCompleted = target.status === 'completed';
+  const alertAlreadySent = target.telegramAlertSent;
+
+  const updatedOrder: Order = {
+    ...target,
+    status: 'completed',
+    telegramAlertSent: true,
+  };
+
+  const updated = orders.map((o) => (o.orderId === orderId ? updatedOrder : o));
   saveStoredOrders(updated);
 
   if (isSupabaseConfigured && supabase) {
@@ -67,7 +76,12 @@ export async function markOrderCompleted(orderId: string): Promise<Order | null>
     }
   }
 
-  return { ...target, status: 'completed' };
+  // ONLY send Telegram alert when payment is confirmed/received!
+  if (!wasAlreadyCompleted || !alertAlreadySent) {
+    sendTelegramOrderAlert(updatedOrder).catch((err) => console.warn('Telegram payment alert error:', err));
+  }
+
+  return updatedOrder;
 }
 
 function getTelegramOffset(): number {
@@ -111,27 +125,24 @@ export async function sendTelegramOrderAlert(order: Order): Promise<boolean> {
 
   const md5Line = order.md5 ? `🔑 *KHQR MD5:* \`${order.md5}\`\n` : '';
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-  const confirmWebUrl = `${siteUrl}/api/orders/confirm?orderId=${order.orderId}`;
-
   const text = `
-🔔 *ការកុម្ម៉ង់ថ្មី (New Order)* #\`${order.orderId}\`
+🎉 *ការទូទាត់ទទួលបានជោគជ័យ (Payment Received!)*
+🧾 *លេខវិក្កយបត្រ:* #\`${order.orderId}\`
 ---------------------------------------
+✅ *ស្ថានភាព:* ទទួលបានប្រាក់រួចរាល់ (PAID)
 👤 *អតិថិជន:* ${order.customerName}
 📞 *លេខទូរស័ព្ទ:* ${order.phone}
 🎒 *សិស្ស:* ${order.studentName || 'មិនបញ្ជាក់'} (${order.studentGrade})
 🚚 *ការទទួល:* ${order.pickupMethod}
 💳 *វិធីទូទាត់:* ${order.paymentMethod.includes('KHQR') ? '📱 KHQR Bakong (ABA: SOVATKANHCHANA SENG)' : order.paymentMethod}
 ${md5Line}
-📦 *មុខទំនិញ:*
+📦 *មុខទំនិញដែលបានទិញ:*
 ${itemsList}
 
-💰 *សរុប:* *${order.totalKhr.toLocaleString()} ៛* (~$${order.totalUsd.toFixed(2)})
+💰 *សរុបបានទូទាត់:* *${order.totalKhr.toLocaleString()} ៛* (~$${order.totalUsd.toFixed(2)})
 ⏰ *កាលបរិច្ឆេទ:* ${new Date(order.createdAt).toLocaleString('km-KH')}
 ---------------------------------------
-ℹ️ *ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់ការទូទាត់ Online ដោយស្វ័យប្រវត្តិ... (Auto Online Verification)*
+🏫 *ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម*
   `.trim();
 
   try {
