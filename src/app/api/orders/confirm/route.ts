@@ -4,6 +4,8 @@ import path from 'path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Order } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 const dataDir = path.join(process.cwd(), 'data');
 const ordersFilePath = path.join(dataDir, 'orders.json');
 

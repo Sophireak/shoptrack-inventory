@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { Order } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 const ordersFilePath = path.join(process.cwd(), 'data', 'orders.json');
 
 function getStoredOrders(): Order[] {
@@ -35,7 +37,17 @@ export async function POST(req: Request) {
     const order = orders.find((o) => (md5 && o.md5 === md5) || (orderId && o.orderId === orderId));
 
     // 1. If Bakong Developer Bearer Token is configured, query NBC Bakong Open API
-    const bakongToken = process.env.BAKONG_AUTH_TOKEN;
+    let bakongToken = process.env.BAKONG_AUTH_TOKEN;
+    if (!bakongToken) {
+      try {
+        const settingsPath = path.join(process.cwd(), 'data', 'settings.json');
+        if (fs.existsSync(settingsPath)) {
+          const parsed = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+          if (parsed.bakongAuthToken) bakongToken = parsed.bakongAuthToken;
+        }
+      } catch {}
+    }
+
     if (bakongToken && md5) {
       try {
         const bakongRes = await fetch('https://api-bakong.nbc.gov.kh/v1/check_transaction_by_md5', {
@@ -51,6 +63,12 @@ export async function POST(req: Request) {
           const bakongData = await bakongRes.json();
           // NBC Bakong responseCode: 0 means transaction received and settled
           if (bakongData.responseCode === 0) {
+            if (order) {
+              const updated = orders.map((o) => (o.orderId === order.orderId ? { ...o, status: 'completed' as const } : o));
+              try {
+                fs.writeFileSync(ordersFilePath, JSON.stringify(updated, null, 2), 'utf-8');
+              } catch {}
+            }
             return NextResponse.json({
               success: true,
               paid: true,

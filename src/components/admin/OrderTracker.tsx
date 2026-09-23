@@ -183,19 +183,32 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
                   <td className="p-3">{getStatusBadge(order.status)}</td>
 
                   <td className="p-3 text-center">
-                    <select
-                      value={order.status}
-                      onChange={(e) =>
-                        onUpdateStatus(order.orderId, e.target.value as Order['status'])
-                      }
-                      className="text-xs py-1 px-2 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer"
-                    >
-                      <option value="pending">រង់ចាំ (Pending)</option>
-                      <option value="confirmed">បានបញ្ជាក់ (Confirmed)</option>
-                      <option value="ready">ត្រៀមរួចរាល់ (Ready)</option>
-                      <option value="completed">បានបញ្ចប់ (Completed)</option>
-                      <option value="cancelled">បោះបង់ (Cancelled)</option>
-                    </select>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                      {order.status === 'pending' && (
+                        <button
+                          type="button"
+                          onClick={() => onUpdateStatus(order.orderId, 'completed')}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2.5 rounded-lg text-[11px] inline-flex items-center gap-1 shadow-xs transition cursor-pointer shrink-0"
+                          title="បញ្ជាក់ថាបានទទួលប្រាក់ និងចេញវិក្កយបត្រស្វ័យប្រវត្តលើអេក្រង់អតិថិជន"
+                        >
+                          <CheckCircle className="w-3 h-3" />
+                          <span>បញ្ជាក់ប្រាក់</span>
+                        </button>
+                      )}
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          onUpdateStatus(order.orderId, e.target.value as Order['status'])
+                        }
+                        className="text-xs py-1 px-2 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer"
+                      >
+                        <option value="pending">រង់ចាំ (Pending)</option>
+                        <option value="confirmed">បានបញ្ជាក់ (Confirmed)</option>
+                        <option value="ready">ត្រៀមរួចរាល់ (Ready)</option>
+                        <option value="completed">បានបញ្ចប់ (Completed)</option>
+                        <option value="cancelled">បោះបង់ (Cancelled)</option>
+                      </select>
+                    </div>
                   </td>
                 </tr>
               ))

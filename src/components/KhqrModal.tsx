@@ -102,6 +102,53 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
     generateQr();
   };
 
+  // Continuous auto-check for payment completion
+  const checkStatusOnce = async () => {
+    if (!order) return;
+    try {
+      // 1. Check dedicated telegram & order updater endpoint
+      const tgRes = await fetch(`/api/telegram/check-updates?orderId=${encodeURIComponent(order.orderId)}`);
+      if (tgRes.ok) {
+        const tgData = await tgRes.json();
+        if (tgData.paid) {
+          handlePaymentSuccess();
+          return;
+        }
+      }
+
+      // 2. Check local order status
+      const res = await fetch('/api/orders');
+      if (res.ok) {
+        const data = await res.json();
+        const allOrders: Order[] = Array.isArray(data) ? data : data?.data || [];
+        const current = allOrders.find((o) => o.orderId === order.orderId);
+        if (current && (current.status === 'confirmed' || current.status === 'completed')) {
+          handlePaymentSuccess();
+          return;
+        }
+      }
+
+      // 3. Also check Bakong Open API via /api/bakong/check-md5 if MD5 exists
+      const md5Val = md5Ref.current || order.md5;
+      if (md5Val) {
+        const bakongRes = await fetch('/api/bakong/check-md5', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ md5: md5Val, orderId: order.orderId }),
+        });
+        if (bakongRes.ok) {
+          const bakongData = await bakongRes.json();
+          if (bakongData.paid) {
+            handlePaymentSuccess();
+            return;
+          }
+        }
+      }
+    } catch {
+      // ignore network blips
+    }
+  };
+
   useEffect(() => {
     if (isOpen && order) {
       // Generate QR only once per order session (prevents endless re-generation loop)
@@ -126,46 +173,27 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         });
       }, 1000);
 
-      // Background Polling /api/orders & /api/bakong/check-md5 every 2 seconds
+      // Background Polling every 2 seconds
       if (pollingRef.current) clearInterval(pollingRef.current);
-      pollingRef.current = setInterval(async () => {
-        try {
-          // 1. Check local order status (updated by Telegram confirm button or Admin)
-          const res = await fetch('/api/orders');
-          if (res.ok) {
-            const data = await res.json();
-            const allOrders: Order[] = Array.isArray(data) ? data : data?.data || [];
-            const current = allOrders.find((o) => o.orderId === order.orderId);
-            if (current && (current.status === 'confirmed' || current.status === 'completed')) {
-              handlePaymentSuccess();
-              return;
-            }
-          }
-
-          // 2. Also check Bakong Open API via /api/bakong/check-md5 if MD5 exists
-          const md5Val = md5Ref.current || order.md5;
-          if (md5Val) {
-            const bakongRes = await fetch('/api/bakong/check-md5', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ md5: md5Val, orderId: order.orderId }),
-            });
-            if (bakongRes.ok) {
-              const bakongData = await bakongRes.json();
-              if (bakongData.paid) {
-                handlePaymentSuccess();
-                return;
-              }
-            }
-          }
-        } catch {
-          // ignore
-        }
+      checkStatusOnce(); // Initial check
+      pollingRef.current = setInterval(() => {
+        checkStatusOnce();
       }, 2000);
+
+      // Re-check immediately when user switches back to browser tab from ABA Mobile
+      const handleFocusOrVisible = () => {
+        if (document.visibilityState === 'visible') {
+          checkStatusOnce();
+        }
+      };
+      window.addEventListener('focus', handleFocusOrVisible);
+      document.addEventListener('visibilitychange', handleFocusOrVisible);
 
       return () => {
         if (timerRef.current) clearInterval(timerRef.current);
         if (pollingRef.current) clearInterval(pollingRef.current);
+        window.removeEventListener('focus', handleFocusOrVisible);
+        document.removeEventListener('visibilitychange', handleFocusOrVisible);
       };
     } else if (!isOpen) {
       generatedForOrderIdRef.current = null;
@@ -387,18 +415,29 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                 </button>
               </div>
 
-              {/* Action Buttons */}
+              {/* Automated Verification Radar Card (Zero-Click for Customer) */}
               <div className="space-y-2 pt-1">
-                <button
-                  type="button"
-                  onClick={handlePaymentSuccess}
-                  className="w-full bg-[#002f49] hover:bg-[#001f33] active:scale-98 text-white font-black py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#002f49]/20 transition cursor-pointer"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>ខ្ញុំបានផ្ទេររួចរាល់ (បង្ហាញវិក្កយបត្រភ្លាមៗ)</span>
-                </button>
-                <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-2 text-[10.5px] text-amber-900 text-center leading-relaxed">
-                  💡 បន្ទាប់ពីស្កេន និងផ្ទេរប្រាក់ក្នុង ABA រួចរាល់ សូមចុចប៊ូតុងខាងលើដើម្បីទទួលបានវិក្កយបត្រភ្លាមៗ!
+                <div className="bg-gradient-to-br from-emerald-50 via-teal-50/60 to-blue-50/40 border border-emerald-200/90 rounded-2xl p-3.5 space-y-2 text-center shadow-xs">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span className="font-extrabold text-xs text-emerald-950">
+                      កំពុងផ្ទៀងផ្ទាត់ការផ្ទេរប្រាក់ដោយស្វ័យប្រវត្តិ...
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 leading-relaxed font-khmer">
+                    ក្រោយពេលលោកអ្នកស្កេន និងផ្ទេរប្រាក់ក្នុង ABA ឬ Bakong រួចរាល់ ប្រព័ន្ធនឹងបញ្ជាក់ និងបង្ហាញវិក្កយបត្រជូនលោកអ្នកដោយស្វ័យប្រវត្តិភ្លាមៗ!
+                  </p>
+                  <div className="flex items-center justify-center gap-3 text-[10px] text-emerald-700 font-sans pt-0.5">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Auto-Check: Active
+                    </span>
+                    <span>•</span>
+                    <span>ABA & Bakong Sync</span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">

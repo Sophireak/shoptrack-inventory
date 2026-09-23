@@ -1,6 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import { Order } from '@/types';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+
+const dataDir = path.join(process.cwd(), 'data');
+const ordersFilePath = path.join(dataDir, 'orders.json');
+const offsetFilePath = path.join(dataDir, 'telegram_offset.json');
+
+let isPollingActive = false;
+let memoryOffset: number | null = null;
 
 function getStoredTokenAndChatId(): { token?: string; chatId?: string } {
   let token = process.env.TELEGRAM_BOT_TOKEN;
@@ -8,7 +16,7 @@ function getStoredTokenAndChatId(): { token?: string; chatId?: string } {
 
   if (!token || !chatId) {
     try {
-      const settingsPath = path.join(process.cwd(), 'data', 'settings.json');
+      const settingsPath = path.join(dataDir, 'settings.json');
       if (fs.existsSync(settingsPath)) {
         const parsed = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
         if (!token && parsed.telegramBotToken) token = parsed.telegramBotToken;
@@ -17,6 +25,74 @@ function getStoredTokenAndChatId(): { token?: string; chatId?: string } {
     } catch {}
   }
   return { token, chatId };
+}
+
+function getStoredOrders(): Order[] {
+  try {
+    if (fs.existsSync(ordersFilePath)) {
+      const content = fs.readFileSync(ordersFilePath, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error('Error reading stored orders:', err);
+  }
+  return [];
+}
+
+function saveStoredOrders(orders: Order[]) {
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(ordersFilePath, JSON.stringify(orders, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing stored orders:', err);
+  }
+}
+
+export async function markOrderCompleted(orderId: string): Promise<Order | null> {
+  const orders = getStoredOrders();
+  const target = orders.find((o) => o.orderId === orderId);
+  if (!target) return null;
+
+  const updated = orders.map((o) => (o.orderId === orderId ? { ...o, status: 'completed' as const } : o));
+  saveStoredOrders(updated);
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('orders').update({ status: 'completed' }).eq('order_number', orderId);
+    } catch (e) {
+      console.warn('Supabase status update fallback:', e);
+    }
+  }
+
+  return { ...target, status: 'completed' };
+}
+
+function getTelegramOffset(): number {
+  if (memoryOffset !== null) return memoryOffset;
+  try {
+    if (fs.existsSync(offsetFilePath)) {
+      const content = fs.readFileSync(offsetFilePath, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (typeof parsed?.offset === 'number') {
+        memoryOffset = parsed.offset;
+        return parsed.offset;
+      }
+    }
+  } catch {}
+  return 0;
+}
+
+function saveTelegramOffset(offset: number) {
+  memoryOffset = offset;
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(offsetFilePath, JSON.stringify({ offset, updatedAt: new Date().toISOString() }), 'utf-8');
+  } catch {}
 }
 
 export async function sendTelegramOrderAlert(order: Order): Promise<boolean> {
@@ -38,7 +114,7 @@ export async function sendTelegramOrderAlert(order: Order): Promise<boolean> {
   const siteUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-  const confirmUrl = `${siteUrl}/api/orders/confirm?orderId=${order.orderId}`;
+  const confirmWebUrl = `${siteUrl}/api/orders/confirm?orderId=${order.orderId}`;
 
   const text = `
 🔔 *ការកុម្ម៉ង់ថ្មី (New Order)* #\`${order.orderId}\`
@@ -55,46 +131,183 @@ ${itemsList}
 💰 *សរុប:* *${order.totalKhr.toLocaleString()} ៛* (~$${order.totalUsd.toFixed(2)})
 ⏰ *កាលបរិច្ឆេទ:* ${new Date(order.createdAt).toLocaleString('km-KH')}
 ---------------------------------------
-🏫 *ហាងឯកសណ្ឋានសិស្ស សម្តេចជាស៊ីម*
+👉 *សូមពិនិត្យមើលលុយចូលក្នុង ABA Mobile រួចចុចប៊ូតុងខាងក្រោមដើម្បីបញ្ជាក់ការទូទាត់៖*
   `.trim();
 
   try {
-    const payload: {
-      chat_id: string;
-      text: string;
-      parse_mode: string;
-      reply_markup?: {
-        inline_keyboard: Array<Array<{ text: string; url: string }>>;
-      };
-    } = {
+    const payload = {
       chat_id: chatId,
       text,
       parse_mode: 'Markdown',
-    };
-
-    if (confirmUrl.startsWith('https://')) {
-      payload.reply_markup = {
+      reply_markup: {
         inline_keyboard: [
           [
             {
-              text: '✅ បញ្ជាក់ថាបានទទួលប្រាក់ (Confirm Payment)',
-              url: confirmUrl,
+              text: '✅ បញ្ជាក់ការទូទាត់ (Confirm Payment)',
+              callback_data: `confirm:${order.orderId}`,
             },
           ],
         ],
-      };
-    } else {
-      payload.text += `\n\n👉 [ចុចទីនេះដើម្បីបញ្ជាក់ការទូទាត់](${confirmUrl})`;
-    }
+      },
+    };
 
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return res.ok;
+
+    const data = await res.json();
+    return res.ok && data?.ok === true;
   } catch (err) {
     console.error('Telegram notification error:', err);
     return false;
   }
+}
+
+/**
+ * Polls Telegram getUpdates for callback_query from cashier tapping the Confirm button.
+ * Marks the order as completed and informs Telegram.
+ */
+export async function pollTelegramUpdates(): Promise<{ processedCount: number; confirmedOrders: string[] }> {
+  if (isPollingActive) {
+    return { processedCount: 0, confirmedOrders: [] };
+  }
+
+  const { token } = getStoredTokenAndChatId();
+  if (!token) {
+    return { processedCount: 0, confirmedOrders: [] };
+  }
+
+  isPollingActive = true;
+  const confirmedOrders: string[] = [];
+  let processedCount = 0;
+
+  try {
+    const currentOffset = getTelegramOffset();
+    const url = `https://api.telegram.org/bot${token}/getUpdates?offset=${currentOffset}&limit=20&timeout=0`;
+    const res = await fetch(url, { method: 'GET' });
+
+    if (!res.ok) {
+      isPollingActive = false;
+      return { processedCount: 0, confirmedOrders: [] };
+    }
+
+    const data = await res.json();
+    if (!data.ok || !Array.isArray(data.result)) {
+      isPollingActive = false;
+      return { processedCount: 0, confirmedOrders: [] };
+    }
+
+    let nextOffset = currentOffset;
+
+    for (const update of data.result) {
+      if (typeof update.update_id === 'number') {
+        nextOffset = Math.max(nextOffset, update.update_id + 1);
+      }
+
+      // 1. Handle Inline Button Click (callback_query)
+      if (update.callback_query) {
+        const cq = update.callback_query;
+        const cqData: string = cq.data || '';
+
+        if (cqData.startsWith('confirm:')) {
+          const orderId = cqData.replace('confirm:', '').trim();
+          if (orderId) {
+            const completed = await markOrderCompleted(orderId);
+            if (completed) {
+              confirmedOrders.push(orderId);
+              processedCount++;
+
+              // Answer callback query with toast notification
+              try {
+                await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    callback_query_id: cq.id,
+                    text: `✅ បានបញ្ជាក់ការទទួលប្រាក់លេខ #${orderId} ជោគជ័យ! អតិថិជនបានទទួលវិក្កយបត្រហើយ។`,
+                    show_alert: false,
+                  }),
+                });
+              } catch {}
+
+              // Update the message inline keyboard to show confirmed status
+              if (cq.message?.chat?.id && cq.message?.message_id) {
+                try {
+                  await fetch(`https://api.telegram.org/bot${token}/editMessageReplyMarkup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      chat_id: cq.message.chat.id,
+                      message_id: cq.message.message_id,
+                      reply_markup: {
+                        inline_keyboard: [
+                          [
+                            {
+                              text: '✅ បានបញ្ជាក់ការទូទាត់រួចរាល់ (Confirmed)',
+                              callback_data: 'done',
+                            },
+                          ],
+                        ],
+                      },
+                    }),
+                  });
+                } catch {}
+              }
+            }
+          }
+        } else if (cqData === 'done') {
+          // Already confirmed, just show toast
+          try {
+            await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                callback_query_id: cq.id,
+                text: 'ℹ️ ការកុម្ម៉ង់នេះត្រូវបានបញ្ជាក់រួចរាល់ហើយ។',
+                show_alert: false,
+              }),
+            });
+          } catch {}
+        }
+      }
+
+      // 2. Handle Text command e.g. /confirm ORD-xxxx
+      if (update.message?.text) {
+        const text = update.message.text.trim();
+        if (text.startsWith('/confirm ')) {
+          const orderId = text.replace('/confirm ', '').trim();
+          if (orderId) {
+            const completed = await markOrderCompleted(orderId);
+            if (completed) {
+              confirmedOrders.push(orderId);
+              processedCount++;
+              try {
+                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    chat_id: update.message.chat.id,
+                    text: `✅ ការកុម្ម៉ង់លេខ *#${orderId}* ត្រូវបានបញ្ជាក់ការទូទាត់ជោគជ័យ!`,
+                    parse_mode: 'Markdown',
+                  }),
+                });
+              } catch {}
+            }
+          }
+        }
+      }
+    }
+
+    if (nextOffset > currentOffset) {
+      saveTelegramOffset(nextOffset);
+    }
+  } catch (err) {
+    console.error('Error polling Telegram updates:', err);
+  } finally {
+    isPollingActive = false;
+  }
+
+  return { processedCount, confirmedOrders };
 }

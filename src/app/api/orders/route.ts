@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { sendTelegramOrderAlert } from '@/lib/telegram';
+import { sendTelegramOrderAlert, pollTelegramUpdates } from '@/lib/telegram';
 import { generateEmvcoKhqr, computeKhqrMd5 } from '@/lib/khqrEngine';
 import { Order } from '@/types';
+
+export const dynamic = 'force-dynamic';
 
 const dataDir = path.join(process.cwd(), 'data');
 const ordersFilePath = path.join(dataDir, 'orders.json');
@@ -129,6 +131,12 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
+    // 1. Automatically check if cashier tapped Confirm in Telegram
+    try {
+      await pollTelegramUpdates();
+    } catch (pollErr) {
+      console.warn('Telegram poll fallback:', pollErr);
+    }
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase
