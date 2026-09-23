@@ -55,7 +55,7 @@ export async function POST(req: Request) {
           amount: orderData.totalKhr,
           billNumber: orderData.orderId,
           storeLabel: 'Chea Sim Uniform Store',
-          expirationMinutes: 1,
+          expirationMinutes: 3,
         });
         orderData.qrString = qrString;
         orderData.md5 = computeKhqrMd5(qrString);

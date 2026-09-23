@@ -131,7 +131,7 @@ ${itemsList}
 💰 *សរុប:* *${order.totalKhr.toLocaleString()} ៛* (~$${order.totalUsd.toFixed(2)})
 ⏰ *កាលបរិច្ឆេទ:* ${new Date(order.createdAt).toLocaleString('km-KH')}
 ---------------------------------------
-👉 *សូមពិនិត្យមើលលុយចូលក្នុង ABA Mobile រួចចុចប៊ូតុងខាងក្រោមដើម្បីបញ្ជាក់ការទូទាត់៖*
+ℹ️ *ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់ការទូទាត់ Online ដោយស្វ័យប្រវត្តិ... (Auto Online Verification)*
   `.trim();
 
   try {
@@ -139,16 +139,6 @@ ${itemsList}
       chat_id: chatId,
       text,
       parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: '✅ បញ្ជាក់ការទូទាត់ (Confirm Payment)',
-              callback_data: `confirm:${order.orderId}`,
-            },
-          ],
-        ],
-      },
     };
 
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {

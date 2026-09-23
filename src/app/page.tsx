@@ -387,7 +387,7 @@ export default function StorefrontPage() {
           amount: grandTotalKhr,
           billNumber: orderId,
           storeLabel: 'Chea Sim Uniform Store',
-          expirationMinutes: 1,
+          expirationMinutes: 3,
         });
         md5 = computeKhqrMd5(qrString);
       } catch (e) {

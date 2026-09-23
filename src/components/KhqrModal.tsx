@@ -36,8 +36,8 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   onClose,
   onComplete,
 }) => {
-  // Timer state: 60 seconds countdown
-  const [timeLeft, setTimeLeft] = useState<number>(60);
+  // Timer state: 3 minutes (180 seconds) countdown
+  const [timeLeft, setTimeLeft] = useState<number>(180);
   const [isExpired, setIsExpired] = useState<boolean>(false);
   const [dynamicQrUrl, setDynamicQrUrl] = useState<string>('');
   const [md5Hash, setMd5Hash] = useState<string>('');
@@ -52,7 +52,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   const accountName = settings.accountName || 'SOVATKANHCHANA SENG';
   const accountKhr = settings.accountKhr || '008 906 861';
 
-  // 1. Generate Dynamic QR Code with exact item price, Tag 99 expiration, and MD5
+  // 1. Generate Dynamic QR Code with exact item price, Tag 99 expiration (3 mins), and MD5
   const generateQr = async () => {
     if (!order) return;
     try {
@@ -65,7 +65,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         amount: order.totalKhr,
         billNumber: order.orderId,
         storeLabel: 'Chea Sim Uniform Store',
-        expirationMinutes: 1,
+        expirationMinutes: 3,
       });
       setDynamicQrUrl(result.dataUrl);
       setMd5Hash(result.md5);
@@ -95,9 +95,9 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
     if (onComplete) onComplete();
   };
 
-  // Reset & Start countdown
+  // Reset & Start countdown (3 mins)
   const resetTimer = () => {
-    setTimeLeft(60);
+    setTimeLeft(180);
     setIsExpired(false);
     generateQr();
   };
@@ -155,12 +155,12 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
       if (generatedForOrderIdRef.current !== order.orderId) {
         generatedForOrderIdRef.current = order.orderId;
         setPaymentStatus('waiting');
-        setTimeLeft(60);
+        setTimeLeft(180);
         setIsExpired(false);
         generateQr();
       }
 
-      // 60s countdown timer
+      // 3-minute (180s) countdown timer
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
@@ -213,6 +213,9 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
   };
 
   if (!isOpen || !order) return null;
+
+  const minutesLeft = Math.floor(timeLeft / 60);
+  const secondsLeft = timeLeft % 60;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
@@ -282,7 +285,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                 </div>
               </div>
 
-              {/* 1-Minute Countdown Timer & Live Check Status */}
+              {/* 3-Minute Countdown Timer & Live Check Status */}
               <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5">
@@ -295,22 +298,22 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                     className={`font-mono font-black text-sm px-2 py-0.5 rounded-md ${
                       isExpired
                         ? 'bg-rose-100 text-rose-700'
-                        : timeLeft <= 15
+                        : timeLeft <= 30
                         ? 'bg-rose-100 text-rose-700 animate-pulse'
                         : 'bg-amber-100 text-amber-800'
                     }`}
                   >
-                    00:{String(timeLeft).padStart(2, '0')}
+                    {String(minutesLeft).padStart(2, '0')}:{String(secondsLeft).padStart(2, '0')}
                   </span>
                 </div>
 
-                {/* Progress bar */}
+                {/* Progress bar (3 minutes = 180s) */}
                 <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all duration-1000 ${
-                      isExpired ? 'bg-rose-500' : timeLeft <= 15 ? 'bg-rose-500' : 'bg-school-600'
+                      isExpired ? 'bg-rose-500' : timeLeft <= 30 ? 'bg-rose-500' : 'bg-school-600'
                     }`}
-                    style={{ width: `${(timeLeft / 60) * 100}%` }}
+                    style={{ width: `${(timeLeft / 180) * 100}%` }}
                   />
                 </div>
 
@@ -333,7 +336,7 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
                     <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
                       <Clock className="w-6 h-6" />
                     </div>
-                    <div className="font-bold text-slate-800 text-sm">QR Code នេះបានផុតកំណត់ 1 នាទីហើយ</div>
+                    <div className="font-bold text-slate-800 text-sm">QR Code នេះបានផុតកំណត់ 3 នាទីហើយ</div>
                     <p className="text-xs text-slate-500 max-w-xs">
                       សូមចុចប៊ូតុងខាងក្រោមដើម្បីបង្កើត QR ថ្មីជាមួយតម្លៃទំនិញឡើងវិញ
                     </p>
