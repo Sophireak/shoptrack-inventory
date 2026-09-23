@@ -102,33 +102,11 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
     generateQr();
   };
 
-  // Continuous auto-check for payment completion
+  // Continuous auto-check for payment completion every second
   const checkStatusOnce = async () => {
     if (!order) return;
     try {
-      // 1. Check dedicated telegram & order updater endpoint
-      const tgRes = await fetch(`/api/telegram/check-updates?orderId=${encodeURIComponent(order.orderId)}`);
-      if (tgRes.ok) {
-        const tgData = await tgRes.json();
-        if (tgData.paid) {
-          handlePaymentSuccess();
-          return;
-        }
-      }
-
-      // 2. Check local order status
-      const res = await fetch('/api/orders');
-      if (res.ok) {
-        const data = await res.json();
-        const allOrders: Order[] = Array.isArray(data) ? data : data?.data || [];
-        const current = allOrders.find((o) => o.orderId === order.orderId);
-        if (current && (current.status === 'confirmed' || current.status === 'completed')) {
-          handlePaymentSuccess();
-          return;
-        }
-      }
-
-      // 3. Also check Bakong Open API via /api/bakong/check-md5 if MD5 exists
+      // 1. Direct check with NBC Bakong / ABA Open API by KHQR MD5
       const md5Val = md5Ref.current || order.md5;
       if (md5Val) {
         const bakongRes = await fetch('/api/bakong/check-md5', {
@@ -142,6 +120,28 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
             handlePaymentSuccess();
             return;
           }
+        }
+      }
+
+      // 2. Check dedicated telegram & order updater endpoint
+      const tgRes = await fetch(`/api/telegram/check-updates?orderId=${encodeURIComponent(order.orderId)}`);
+      if (tgRes.ok) {
+        const tgData = await tgRes.json();
+        if (tgData.paid) {
+          handlePaymentSuccess();
+          return;
+        }
+      }
+
+      // 3. Check local order status
+      const res = await fetch('/api/orders');
+      if (res.ok) {
+        const data = await res.json();
+        const allOrders: Order[] = Array.isArray(data) ? data : data?.data || [];
+        const current = allOrders.find((o) => o.orderId === order.orderId);
+        if (current && (current.status === 'confirmed' || current.status === 'completed')) {
+          handlePaymentSuccess();
+          return;
         }
       }
     } catch {
@@ -173,12 +173,12 @@ export const KhqrModal: React.FC<KhqrModalProps> = ({
         });
       }, 1000);
 
-      // Background Polling every 2 seconds
+      // Background Polling every 1 second (1000ms)
       if (pollingRef.current) clearInterval(pollingRef.current);
       checkStatusOnce(); // Initial check
       pollingRef.current = setInterval(() => {
         checkStatusOnce();
-      }, 2000);
+      }, 1000);
 
       // Re-check immediately when user switches back to browser tab from ABA Mobile
       const handleFocusOrVisible = () => {
